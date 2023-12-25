@@ -9,7 +9,7 @@ public class DBManagement {
     public DBManagement(String hostname, int port, String user, String pass) throws SQLException {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            connectDB = DriverManager.getConnection("jdbc:mysql://"+ hostname +":"+ port +"/DB", user, pass);
+            connectDB = DriverManager.getConnection("jdbc:mysql://"+ hostname +":"+ port +"/ATI", user, pass);
             System.out.println("DataBase Connesso");
 
         } catch (ClassNotFoundException ex) {

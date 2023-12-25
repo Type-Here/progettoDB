@@ -4,7 +4,7 @@ import java.awt.*;
 import java.sql.SQLException;
 import java.util.Arrays;
 
-public class MainGUI {
+public class MainGUI extends Component {
     private JTextArea textArea1;
     private JPanel panel1;
     private int attempts;
@@ -14,9 +14,18 @@ public class MainGUI {
         attempts = 1;
         startDialog();
 
+        JFrame mainFrame = new JFrame("ATI Management System");
+        mainFrame.setLocationRelativeTo(null);
+        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainFrame.setPreferredSize(new Dimension(400, 300));
+        mainFrame.add(this);
+        mainFrame.setVisible(true);
+
         if(managerDB.isConnected()){
-            //DOTHINGS
+            JOptionPane.showMessageDialog(this, "Connected");
+            managerDB.closeConnection();
         } else throw new RuntimeException("Unable to Connect");
+
 
     }
 
@@ -57,9 +66,10 @@ public class MainGUI {
         int option = JOptionPane.showConfirmDialog(null, dialogPanel, title, JOptionPane.OK_CANCEL_OPTION);
         if(option == JOptionPane.OK_OPTION){
             //System.out.println(user.getText()); //Only DEBUG PURPOSES
-            //System.out.println(pass.getText());
+            //System.out.println( new String(pass.getPassword()) ); //Only DEBUG PURPOSES
+
             try {
-                this.managerDB = new DBManagement( user.getText(), Arrays.toString(pass.getPassword()) );
+                this.managerDB = new DBManagement( user.getText(),  new String(pass.getPassword()) );
 
             } catch (SQLException e) {
                 if(this.attempts < 3){
