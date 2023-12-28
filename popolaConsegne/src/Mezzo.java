@@ -8,9 +8,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Mezzo extends ATI{
-    private String targa;
-    private List<categorieEnum> categorie;
-    private tipologiaMezzo tipologiaMezzo;
+    private final String targa;
+    private final List<categorieEnum> categorie;
+    private final tipologiaMezzo tipologiaMezzo;
 
     public Mezzo(String targa, ATI.tipologiaMezzo tipologiaMezzo) {
         this.targa = targa;
@@ -39,6 +39,32 @@ public class Mezzo extends ATI{
     public void addCategory(categorieEnum cat){
         this.categorie.add(cat);
     }
+
+    /**
+     *  Read Mezzo from a file Loads Only Targa!
+     * @param fileMezzi file to read data of Mezzo from
+     * @return List of Mezzo with lista categorie null
+     */
+    public static List<Mezzo> getMezzoFromFile(File fileMezzi){
+        List<Mezzo> mezzi = new LinkedList<>();
+        try( Scanner read = new Scanner(fileMezzi) ){
+            while(read.hasNext()){
+                String line = read.nextLine();
+
+                Matcher targa = Pattern.compile("'([A-Z]{2}[0-9]{3,6}[A-Z]{0,2})'").matcher(line);
+                Matcher tipologia = Pattern.compile("'(Treno|Autotreno|Motrice)'").matcher(line);
+
+                if(targa.find() && tipologia.find()) {
+                    mezzi.add(new Mezzo(targa.group(1), ATI.tipologiaMezzo.valueOf(tipologia.group(1).substring(0, 1))));
+                }
+            }
+
+        } catch (FileNotFoundException e){
+            throw new RuntimeException(e);
+        }
+        return mezzi;
+    }
+
 
 
     /**
@@ -78,7 +104,6 @@ public class Mezzo extends ATI{
             }
 
         }
-
         return mezzi;
     }
 
@@ -91,4 +116,5 @@ public class Mezzo extends ATI{
                 ", tipologiaMezzo=" + tipologiaMezzo +
                 '}';
     }
+
 }
