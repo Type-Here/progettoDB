@@ -7,11 +7,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TipoMerce extends ATI{
-    private String codice;
-    private String name;
-    private double peso;
-    private tipologiaMezzo tipologiaMezzo;
-    private categorieEnum categoria;
+    private final String codice;
+    private final String name;
+    private final double peso;
+    private final tipologiaMezzo tipologiaMezzo;
+    private final categorieEnum categoria;
 
     public TipoMerce(String codice) {
         this.codice = codice;
@@ -82,4 +82,18 @@ public class TipoMerce extends ATI{
                 ", categoria=" + categoria +
                 '}';
     }
+
+    /**
+     * Overridden Method Equals
+     * @param o Object to Compare
+     * @return true if same object or same CodiceMerce.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TipoMerce tipoMerce = (TipoMerce) o;
+        return this.codice.equals(tipoMerce.codice);
+    }
+
 }

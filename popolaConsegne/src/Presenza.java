@@ -8,8 +8,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Presenza {
-    private Trasportatore trasportatore;
-    private String data;
+    private final Trasportatore trasportatore;
+    private final String data;
 
     public Presenza(Trasportatore trasportatore, String data) {
         this.trasportatore = trasportatore;

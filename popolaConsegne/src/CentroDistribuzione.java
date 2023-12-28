@@ -6,10 +6,10 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class CentroDistribuzione {
-    private String citta;
-    private String zona;
-    private int distanza;
+public class CentroDistribuzione extends ATI{
+    private final String citta;
+    private final String zona;
+    private final int distanza;
 
     public CentroDistribuzione(String citta, String zona) {
         this.citta = citta;
@@ -57,4 +57,18 @@ public class CentroDistribuzione {
         }
         return centri;
     }
+
+    /**
+     * Overridden Method Equals
+     * @param o Object to Compare
+     * @return true if same object or same Città and Zona.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CentroDistribuzione that = (CentroDistribuzione) o;
+        return this.citta.equals(that.citta) && this.zona.equals(that.zona);
+    }
+
 }

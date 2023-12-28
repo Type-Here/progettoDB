@@ -1,9 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -115,6 +112,19 @@ public class Mezzo extends ATI{
                 ", categorie=" + categorie +
                 ", tipologiaMezzo=" + tipologiaMezzo +
                 '}';
+    }
+
+    /**
+     * Overridden Method Equals
+     * @param o Object to Compare
+     * @return true if same object or same Targa.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Mezzo mezzo = (Mezzo) o;
+        return this.targa.equals(mezzo.targa);
     }
 
 }

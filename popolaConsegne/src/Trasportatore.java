@@ -7,15 +7,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Trasportatore {
-    private String matricola;
+    private final String matricola;
 
     public Trasportatore(String matricola) {
         this.matricola = matricola;
     }
 
+    /* GETTERS */
     public String getMatricola() {
         return matricola;
     }
+
+
 
     public static List<Trasportatore> getTrasportatoreFromFile(File file) throws FileNotFoundException {
         List<Trasportatore> trasportatori = new LinkedList<>();
@@ -27,13 +30,9 @@ public class Trasportatore {
                 if(id.find()){
                     trasportatori.add(new Trasportatore(id.group(1)));
                 }
-
             }
-
         }
-
-        //trasportatori.forEach(e -> System.out.println(e.getMatricola()));
-
+        //trasportatori.forEach(e -> System.out.println(e.getMatricola())); //Debug Only
         return trasportatori;
     }
 
