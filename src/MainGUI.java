@@ -1,19 +1,25 @@
 import javax.swing.*;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
+import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Random;
 
 public class MainGUI {
+    /* JComponents */
     private JPanel mainContainer;
     private JPanel topPanel;
     private JTable tableView;
     private JComboBox<Object> tabelleComboBox;
     private JButton cercaTabButton;
     private JTextArea textAreaLog;
-
-    DBManagement managerDB;
-    TableManager tableManager;
-    TextAreaManager textAreaManager;
-    LoggerManager loggerManager;
+    /* Custom Objects */
+    private final JMenuBar menuBar;
+    private DBManagement managerDB;
+    private final TableManager tableManager;
+    private final TextAreaManager textAreaManager;
+    private final LoggerManager loggerManager;
 
     public MainGUI(){
         loggerManager = new LoggerManager();
@@ -28,6 +34,7 @@ public class MainGUI {
             JOptionPane.showMessageDialog(this.getMainContainer(), "Connected");
         } else throw new RuntimeException("Unable to Connect");
 
+        menuBar = addMainMenu();
 
         textAreaManager = new TextAreaManager(textAreaLog);
         tableManager = new TableManager(tableView, managerDB);
@@ -49,6 +56,10 @@ public class MainGUI {
      */
     public JPanel getMainContainer() {
         return this.mainContainer;
+    }
+
+    public JMenuBar getJMenuBar(){
+        return this.menuBar;
     }
 
     /**
@@ -100,5 +111,72 @@ public class MainGUI {
             }
         });
     }
+
+    private JMenuBar addMainMenu(){
+        JMenuBar menuBar = new JMenuBar();
+        menuBar.setPreferredSize(new Dimension(50,20));
+        JMenu menuFile = new JMenu("File");
+        JMenu menuOperazioni = new JMenu("Operazioni");
+        JMenu menuModifica = new JMenu("Modifica");
+        JMenu menuAbout = new JMenu("About");
+        menuBar.setFocusTraversalKeysEnabled(true);
+
+        /* File Menu */
+        JMenuItem riconnetti = new JMenuItem("Riconnetti");
+        JMenuItem esci = new JMenuItem("Esci");
+
+        menuFile.add(riconnetti);
+        menuFile.add(esci);
+
+        //Riconnetti
+        riconnetti.addActionListener(e ->{
+            this.managerDB = new StartDialog(this.loggerManager).startDialog("Riconnetti al BataBase ATI");
+            if(this.managerDB == null) throw new RuntimeException("Unable To Reconnect");
+        });
+
+        //Esci
+        esci.addActionListener(e -> {
+            this.closeConnection();
+            System.exit(0);
+        });
+
+
+        /* Modifica Menu */
+        JMenuItem inserisciModifica = new JMenuItem("Inserisci Riga...");
+        JMenuItem updateModifica = new JMenuItem("Modifica Riga...");
+        JMenuItem deleteModifica = new JMenuItem("Elimina Riga...");
+
+        menuModifica.add(inserisciModifica);
+        menuModifica.add(updateModifica);
+        menuModifica.add(deleteModifica);
+
+        /*TODO*/
+
+        /* Operazioni Menu */
+
+        /*TODO*/
+
+        /* About Menu */
+        String aboutMessage = "From ATI S.P.A. \nCreated By: type-here and gianni \nVersion 0.1";
+        menuAbout.addMenuListener(new MenuListener() {
+            @Override
+            public void menuSelected(MenuEvent e) {
+                JOptionPane.showMessageDialog(getMainContainer(), aboutMessage, "About", JOptionPane.INFORMATION_MESSAGE);
+            }
+            @Override
+            public void menuDeselected(MenuEvent e) { }
+            @Override
+            public void menuCanceled(MenuEvent e) { }
+        });
+
+        menuBar.add(menuFile);
+        menuBar.add(menuModifica);
+        menuBar.add(menuOperazioni);
+        menuBar.add(menuAbout);
+
+        return menuBar;
+    }
+
+
 }
 

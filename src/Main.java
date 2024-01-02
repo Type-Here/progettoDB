@@ -13,6 +13,7 @@ public class Main {
         mainFrame.setMinimumSize(new Dimension(500, 400));
         mainFrame.setSize(900,800);
         mainFrame.add(GUI.getMainContainer());
+        mainFrame.setJMenuBar(GUI.getJMenuBar());
         mainFrame.setVisible(true);
 
         mainFrame.addWindowListener(new WindowAdapter(){
