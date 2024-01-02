@@ -1,3 +1,5 @@
+package it.unisa.progettodb;
+
 import javax.swing.*;
 
 public class TextAreaManager {
@@ -18,5 +20,5 @@ public class TextAreaManager {
     public void appendLnText(String text){
         this.textArea.append(text + "\n");
     }
-    
+
 }

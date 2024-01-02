@@ -1,3 +1,8 @@
+package it.unisa.progettodb;
+
+import it.unisa.progettodb.exceptions.NullTableException;
+import it.unisa.progettodb.logs.LoggerManager;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,7 +17,7 @@ public class DBManagement {
     private ResultSet rSet;
     private LoggerManager loggerManager;
 
-    public enum ActionEnum {Select, Insert, Update, GetSchemas, Connected}
+    public enum ActionEnum {Select, Insert, Update, GetSchemas, Connected, FetchDataType}
 
     public DBManagement(String user, String pass) throws SQLException {
         this("localhost", 3306, user ,pass);
@@ -85,7 +90,7 @@ public class DBManagement {
     }
 
     /**
-     * Send Data to LoggerManager if exists
+     * Send Data to logs.LoggerManager if exists
      * @param action action to log
      */
     private void sendToLog(ActionEnum action) {
@@ -93,7 +98,7 @@ public class DBManagement {
     }
 
     /**
-     * Send Data to LoggerManager if exists
+     * Send Data to logs.LoggerManager if exists
      * @param info String to add detail (used also to print query)
      * @param action action to log
      */
@@ -125,4 +130,21 @@ public class DBManagement {
         this.sendToLog(build.toString(), ActionEnum.Select);
         return rSet;
     }
+
+    public List<JDBCType> fetchDataType(String tableName) throws SQLException {
+        if(tableName == null) throw new NullTableException();
+
+        List<JDBCType> dataType = new ArrayList<>();
+        try( ResultSet rSet = this.executeSelect(new String[]{"*"}, tableName) ){
+            for (int i = 1; i <= rSet.getMetaData().getColumnCount(); i++) {
+                int type = rSet.getMetaData().getColumnType(i);
+                dataType.add(JDBCType.valueOf(type));
+            }
+        }
+
+        this.sendToLog("On " + tableName, ActionEnum.FetchDataType);
+        return dataType;
+    }
+
+
 }

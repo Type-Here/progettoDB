@@ -1,3 +1,7 @@
+package it.unisa.progettodb.logs;
+
+import it.unisa.progettodb.*;
+
 public class LoggerManager {
     private TextAreaManager textAreaManager;
 

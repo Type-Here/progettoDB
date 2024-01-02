@@ -1,3 +1,7 @@
+package it.unisa.progettodb;
+
+import it.unisa.progettodb.logs.LoggerManager;
+
 import javax.swing.*;
 import java.awt.*;
 import java.sql.SQLException;

@@ -1,3 +1,8 @@
+package it.unisa.progettodb;
+
+import it.unisa.progettodb.logs.LoggerManager;
+import it.unisa.progettodb.modify.Insert;
+
 import javax.swing.*;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
@@ -19,6 +24,7 @@ public class MainGUI {
     private final TableManager tableManager;
     private final TextAreaManager textAreaManager;
     private final LoggerManager loggerManager;
+    private String currentTable;
 
     public MainGUI(){
         loggerManager = new LoggerManager();
@@ -108,6 +114,7 @@ public class MainGUI {
                 String tab = selected.toString();
                 try {
                     tableManager.setTable(tab);
+                    this.currentTable = tab;
                 } catch (SQLException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -157,7 +164,13 @@ public class MainGUI {
         menuModifica.add(updateModifica);
         menuModifica.add(deleteModifica);
 
+        //Inserisci (Modifica)
+        inserisciModifica.addActionListener(e ->{
+
+            Insert insertPane = new Insert(this.getMainContainer(), this.managerDB, currentTable);
+        });
         /*TODO*/
+
 
         /* Operazioni Menu */
 

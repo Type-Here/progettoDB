@@ -1,3 +1,5 @@
+package it.unisa.progettodb;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.sql.ResultSet;
@@ -115,7 +117,13 @@ public class TableManager {
      * @return new DefaultTableModel
      */
     private DefaultTableModel newModel() {
-        DefaultTableModel newModel = new DefaultTableModel();
+        DefaultTableModel newModel = new DefaultTableModel(){
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                //all cells false
+                return false;
+            }
+        };
         /*new TableModelListener(){public void tableChanged(TableModelEvent e)}*/
         newModel.addTableModelListener(e -> {
                 /*TODO*/

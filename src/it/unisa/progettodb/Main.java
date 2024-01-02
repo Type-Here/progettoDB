@@ -1,3 +1,5 @@
+package it.unisa.progettodb;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
