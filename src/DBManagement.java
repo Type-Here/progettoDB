@@ -40,6 +40,9 @@ public class DBManagement {
         }
     }
 
+    /**
+     * Close Connection to DataBase
+     */
     public void closeConnection(){
         try {
             connectDB.close();
@@ -48,7 +51,10 @@ public class DBManagement {
         }
     }
 
-
+    /**
+     * Check if DataBase is correctly connected
+     * @return true if connected, false otherwise
+     */
     public boolean isConnected(){
         try {
             return connectDB.isValid(5);
@@ -57,7 +63,11 @@ public class DBManagement {
         }
     }
 
-
+    /**
+     * Get Names of Schemas in DataBase (Table Names)
+     * @return list of string containing the names of
+     * @throws SQLException if fails to get info
+     */
     public List<String> getTablesName() throws SQLException {
         //DatabaseMetaData md = connectDB.getMetaData();
         List<String> tabNames = new ArrayList<>();
@@ -69,21 +79,39 @@ public class DBManagement {
         while (rSet.next()) {
             tabNames.add( rSet.getString(1) );
         }
+
         this.sendToLog(ActionEnum.GetSchemas);
         return tabNames;
     }
 
+    /**
+     * Send Data to LoggerManager if exists
+     * @param action action to log
+     */
     private void sendToLog(ActionEnum action) {
         if(this.loggerManager != null) loggerManager.log(action);
     }
 
+    /**
+     * Send Data to LoggerManager if exists
+     * @param info String to add detail (used also to print query)
+     * @param action action to log
+     */
     private void sendToLog(String info, ActionEnum action) {
         if(this.loggerManager != null) loggerManager.log(info, action);
     }
 
+    /**
+     * Execute a SELECT row0, row1 [, ...] FROM TableName
+     * @param row column to SELECT (es. *, name, surname ecc..)
+     * @param tableName table to select FROM
+     * @return ResultSet with result Data
+     * @throws SQLException if SELECT fails
+     */
     public ResultSet executeSelect(String[] row, String tableName) throws SQLException {
         StringBuilder build = new StringBuilder();
         Iterator<String> rowIt = Arrays.stream(row).iterator();
+
         build.append("SELECT ");
         while(rowIt.hasNext()) {
             build.append(rowIt.next());

@@ -11,11 +11,23 @@ public class StartDialog extends JComponent{
         this.loggerManager = loggerManager;
     }
 
+    /**
+     * Display JOptionPane to get user and pass to connect to a DataBase,
+     * which is the default in DBManagement Object.
+     * 3 Attempts then close the program.
+     * @return DBManagement manager of DataBase connected with dialog info
+     */
     public DBManagement startDialog(){
         return startDialog("Insert Credentials");
     }
 
-
+    /**
+     * Display JOptionPane to get user and pass to connect to a DataBase,
+     * which is the default in DBManagement Object.
+     * 3 Attempts then close the program.
+     * @param title Custom Title for Dialog Option Pane
+     * @return DBManagement manager of DataBase connected with dialog info
+     */
     public DBManagement startDialog(String title) {
         JPanel dialogPanel = new JPanel(new GridLayout(2,1));
         Dimension StandardDim = new Dimension(200, 20);

@@ -3,6 +3,7 @@ import javax.swing.table.DefaultTableModel;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -98,7 +99,12 @@ public class TableManager {
         while(rSet.next()){
             List<String> row = new ArrayList<>();
             for(int i = 1; i <= tableColumnList.size(); i++){ //Indice riga ResultSet Parte da 1
-                row.add(rSet.getString(i));
+                int type = rSet.getMetaData().getColumnType(i);
+                if( type == Types.BIT || type == Types.BOOLEAN ){
+                    row.add(rSet.getBoolean(i) ? "Si" : "No");
+                } else {
+                    row.add(rSet.getString(i));
+                }
             }
             model.addRow(row.toArray());
         }

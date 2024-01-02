@@ -4,7 +4,6 @@ import javax.swing.event.MenuListener;
 import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Random;
 
 public class MainGUI {
     /* JComponents */
@@ -58,6 +57,10 @@ public class MainGUI {
         return this.mainContainer;
     }
 
+    /**
+     * Getter for the Main Menu Bar. Used for adding it to JFrame
+     * @return JMenuBar menuBar (main menu)
+     */
     public JMenuBar getJMenuBar(){
         return this.menuBar;
     }
@@ -112,6 +115,10 @@ public class MainGUI {
         });
     }
 
+    /**
+     * Create Main Menu
+     * @return JMenuBar
+     */
     private JMenuBar addMainMenu(){
         JMenuBar menuBar = new JMenuBar();
         menuBar.setPreferredSize(new Dimension(50,20));

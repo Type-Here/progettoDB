@@ -20,7 +20,7 @@ public class Main {
 
             public void windowClosing(WindowEvent e){
                GUI.closeConnection();
-
+               System.out.println("Connection Closed.");
             }
 
         });
