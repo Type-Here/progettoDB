@@ -1,5 +1,4 @@
 import javax.swing.*;
-import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -11,16 +10,18 @@ public class MainGUI {
     private JButton cercaTabButton;
     private JTextArea textAreaLog;
 
-    private int attempts;
     DBManagement managerDB;
     TableManager tableManager;
     TextAreaManager textAreaManager;
     LoggerManager loggerManager;
 
     public MainGUI(){
-        attempts = 1;
         loggerManager = new LoggerManager();
-        startDialog();
+
+        /* Prompt for Connection To Database (user/pass) */
+        StartDialog dialog = new StartDialog(this.loggerManager);
+        this.managerDB = dialog.startDialog();
+        if(this.managerDB == null) throw new RuntimeException("Unable to Set managerDB");
 
 
         if(managerDB.isConnected()){
@@ -32,81 +33,30 @@ public class MainGUI {
         tableManager = new TableManager(tableView, managerDB);
         loggerManager.setTextAreaManager(textAreaManager);
 
+        /*Sets tabelleComboBox with Table Names to be Selected for View*/
         setTopPanel();
+
+        /*Button Listener*/
         cercaTabButtonAction();
 
-        try {
-            tableManager.setTable("dipendente");
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
     }
 
-    public void startDialog(){
-        startDialog("Insert Credentials");
-    }
+    /* ------ PUBLIC METHODS ------ */
 
-
-    public void startDialog(String title){
-        JPanel dialogPanel = new JPanel(new GridLayout(2,1));
-        Dimension StandardDim = new Dimension(200, 20);
-
-        JLabel userLabel = new JLabel("User");
-        userLabel.setPreferredSize(new Dimension(100, 20));
-        JTextField user = new JTextField();
-        user.setEditable(true);
-        user.setPreferredSize(StandardDim);
-
-        JLabel passLabel = new JLabel("Password");
-        passLabel.setPreferredSize(new Dimension(100, 20));
-        JPasswordField pass = new JPasswordField();
-        pass.setPreferredSize(StandardDim);
-
-        JPanel row0 = new JPanel();
-        JPanel row1 = new JPanel();
-
-        row0.add(userLabel);
-        //row0.add(new JSeparator(SwingConstants.HORIZONTAL));
-        row0.add(user);
-
-        row1.add(passLabel);
-        //row1.add(new JSeparator(SwingConstants.HORIZONTAL));
-        row1.add(pass);
-
-        dialogPanel.add(row0);
-        dialogPanel.add(row1);
-
-        int option = JOptionPane.showConfirmDialog(null, dialogPanel, title, JOptionPane.OK_CANCEL_OPTION);
-        if(option == JOptionPane.OK_OPTION){
-            //System.out.println(user.getText()); //Only DEBUG PURPOSES
-            //System.out.println( new String(pass.getPassword()) ); //Only DEBUG PURPOSES
-
-            try {
-                this.managerDB = new DBManagement( user.getText(),  new String(pass.getPassword()), loggerManager );
-
-            } catch (SQLException e) {
-                if(this.attempts < 3){
-                    this.attempts++;
-                    startDialog("Credentials - Attempt " + attempts + " (Max: 3)");
-                } else {
-                    JOptionPane.showMessageDialog(dialogPanel, "Max Attempts Exceeded", "Warning", JOptionPane.ERROR_MESSAGE);
-                    System.err.println(e.getMessage());
-                    System.exit(1);
-                }
-            }
-        } else {
-            System.exit(0);
-        }
-    }
-
+    /**
+     * Getter for the Main JPanel. Used for adding it to JFrame
+     * @return JPanel mainContainer
+     */
     public JPanel getMainContainer() {
         return this.mainContainer;
     }
 
-
+    /**
+     * Sets JPanel topPanel.
+     * Used to Updated JComboBox after each change of Table View.
+     */
     public void setTopPanel(){
-        List<String> tables = null;
+        List<String> tables;
         try {
             tables = tableManager.getTableColumnNames();
         } catch (SQLException e) {
@@ -115,14 +65,28 @@ public class MainGUI {
         tables.forEach(n -> tabelleComboBox.addItem(makeObj(n)));
     }
 
+    /**
+     * Close connection to Database
+     */
     public void closeConnection(){
         managerDB.closeConnection();
     }
 
+    /* ------ PRIVATE METHODS ------ */
+
+    /**
+     * Used in JComboBox to Avoid Error if Repeated String
+     * Overrides toString method to reprint original string
+     * @param item string to be transformed in Object
+     * @return Object to add in JComboBox
+     */
     private Object makeObj(final String item)  {
         return new Object() { public String toString() { return item; } };
     }
 
+    /**
+     * Adds Listener to cercaTabButton
+     */
     private void cercaTabButtonAction(){
         cercaTabButton.addActionListener( e -> {
             Object selected = tabelleComboBox.getSelectedItem();

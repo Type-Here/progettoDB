@@ -12,7 +12,7 @@ public class DBManagement {
     private ResultSet rSet;
     private LoggerManager loggerManager;
 
-    public enum ActionEnum {Select, Insert, Update, GetSchemas, Connected};
+    public enum ActionEnum {Select, Insert, Update, GetSchemas, Connected}
 
     public DBManagement(String user, String pass) throws SQLException {
         this("localhost", 3306, user ,pass);
@@ -59,7 +59,7 @@ public class DBManagement {
 
 
     public List<String> getTablesName() throws SQLException {
-        DatabaseMetaData md = connectDB.getMetaData();
+        //DatabaseMetaData md = connectDB.getMetaData();
         List<String> tabNames = new ArrayList<>();
         /*ResultSet rs = md.getTables(null, "ATI", "%", null);*/
         String query = " select table_name from information_schema.tables WHERE table_schema = '"+ DBName + '\'';
