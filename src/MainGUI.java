@@ -58,7 +58,7 @@ public class MainGUI {
     public void setTopPanel(){
         List<String> tables;
         try {
-            tables = tableManager.getTableColumnNames();
+            tables = tableManager.getSchemasNames();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

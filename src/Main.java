@@ -5,7 +5,6 @@ import java.awt.event.WindowEvent;
 
 public class Main {
     public static void main(String[] args) {
-        //System.out.printf("Hello and welcome!");
         MainGUI GUI = new MainGUI();
 
         JFrame mainFrame = new JFrame("ATI Management System");

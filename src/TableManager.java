@@ -27,6 +27,13 @@ public class TableManager {
         this.managerDB = connectDB;
     }
 
+    /**
+     * Main Function That Reprint Table.
+     * Select * From tableName
+     * Updates Column Names in List, Reformat the table columns and add data rows
+     * @param tableName Name of SQL Table to Draw
+     * @throws SQLException if Select Failed
+     */
     public void setTable(String tableName) throws SQLException {
         this.tableName = tableName;
         try (ResultSet rSet = managerDB.executeSelect(new String[]{"*"}, this.tableName)) {
@@ -36,7 +43,12 @@ public class TableManager {
         }
     }
 
-    public List<String> getTableColumnNames() throws SQLException{
+    /**
+     * Gets a List of Strings with the Names of all Tables in DataBase.
+     * @return list of string with table names
+     * @throws SQLException if failed to retrieve info from db
+     */
+    public List<String> getSchemasNames() throws SQLException{
         List<String> tables;
         tables = managerDB.getTablesName();
         return tables;
@@ -44,7 +56,9 @@ public class TableManager {
 
     /* PRIVATE METHODS */
 
-
+    /**
+     * Create a new model (DefaultTableModel) and sets column names
+     */
     private void formatTable(){
         model = newModel(); //Vedi giù
 
@@ -53,12 +67,19 @@ public class TableManager {
         model.fireTableDataChanged();
     }
 
-
+    /**
+     * Updates this.tableColumnList with the Names of each column in specified table.
+     * A resultSet has to be taken before this method call.
+     * @param resultSet to get metadata from
+     * @throws SQLException if getMetaData fails
+     */
     private void setTableColumnList(ResultSet resultSet) throws SQLException {
         ResultSetMetaData metaData = resultSet.getMetaData();
+
         int count = metaData.getColumnCount(); //number of column
         String[] columnName = new String[count];
 
+        /* GetColumnLabel returns String with name of column of index i. It Starts From 1!*/
         this.tableColumnList.clear();
         for (int i = 0; i < count; i++)
         {
@@ -67,6 +88,12 @@ public class TableManager {
         }
     }
 
+
+    /**
+     * Populate Rows of Table. ResultSet is needed before calling this method.
+     * @param rSet ResultSet to Parse
+     * @throws SQLException if parsing fails
+     */
     private void setTableRows(ResultSet rSet) throws SQLException {
         while(rSet.next()){
             List<String> row = new ArrayList<>();
@@ -77,6 +104,10 @@ public class TableManager {
         }
     }
 
+    /**
+     * Create a new DefaultTableModel with Custom Listener
+     * @return new DefaultTableModel
+     */
     private DefaultTableModel newModel() {
         DefaultTableModel newModel = new DefaultTableModel();
         /*new TableModelListener(){public void tableChanged(TableModelEvent e)}*/

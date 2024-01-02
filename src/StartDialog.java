@@ -1,11 +1,8 @@
-import com.mysql.cj.exceptions.UnableToConnectException;
-
 import javax.swing.*;
 import java.awt.*;
 import java.sql.SQLException;
 
 public class StartDialog extends JComponent{
-    private DBManagement managerDB;
     private int attempts;
     private final LoggerManager loggerManager;
 
@@ -50,12 +47,9 @@ public class StartDialog extends JComponent{
 
         int option = JOptionPane.showConfirmDialog(null, dialogPanel, title, JOptionPane.OK_CANCEL_OPTION);
         if(option == JOptionPane.OK_OPTION){
-            //System.out.println(user.getText()); //Only DEBUG PURPOSES
-            //System.out.println( new String(pass.getPassword()) ); //Only DEBUG PURPOSES
 
             try {
-                this.managerDB = new DBManagement( user.getText(),  new String(pass.getPassword()), loggerManager );
-                return managerDB;
+                return new DBManagement(user.getText(), new String(pass.getPassword()), loggerManager);
             } catch (SQLException e) {
                 if(this.attempts < 3){
                     this.attempts++;
