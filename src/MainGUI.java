@@ -1,12 +1,14 @@
-import javax.print.attribute.standard.JobOriginatingUserName;
 import javax.swing.*;
 import java.awt.*;
 import java.sql.SQLException;
-import java.util.Arrays;
+import java.util.List;
 
-public class MainGUI extends Component {
-    private JTextArea textArea1;
-    private JPanel panel1;
+public class MainGUI {
+    private JPanel mainContainer;
+    private JPanel topPanel;
+    private JTable tableView;
+    private JComboBox<Object> tabelleComboBox;
+    private JButton cercaTabButton;
     private int attempts;
     DBManagement managerDB;
 
@@ -14,18 +16,11 @@ public class MainGUI extends Component {
         attempts = 1;
         startDialog();
 
-        JFrame mainFrame = new JFrame("ATI Management System");
-        mainFrame.setLocationRelativeTo(null);
-        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        mainFrame.setPreferredSize(new Dimension(400, 300));
-        mainFrame.add(this);
-        mainFrame.setVisible(true);
-
         if(managerDB.isConnected()){
-            JOptionPane.showMessageDialog(this, "Connected");
-            managerDB.closeConnection();
+            JOptionPane.showMessageDialog(this.getMainContainer(), "Connected");
         } else throw new RuntimeException("Unable to Connect");
 
+        getTableColumnNames();
 
     }
 
@@ -85,4 +80,31 @@ public class MainGUI extends Component {
             System.exit(0);
         }
     }
+
+    public JPanel getMainContainer() {
+        return this.mainContainer;
+    }
+
+
+    public void getTableColumnNames(){
+        List<String> tables;
+        try {
+            tables = managerDB.getTablesName();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        tables.forEach(n -> tabelleComboBox.addItem(makeObj(n)));
+    }
+
+    public void closeConnection(){
+        managerDB.closeConnection();
+    }
+
+
+
+    private Object makeObj(final String item)  {
+        return new Object() { public String toString() { return item; } };
+    }
+
 }
+

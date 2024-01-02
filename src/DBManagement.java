@@ -1,15 +1,22 @@
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @SuppressWarnings("CallToPrintStackTrace")
 public class DBManagement {
     private Connection connectDB;
+    private final String DBName;
+
     public DBManagement(String user, String pass) throws SQLException {
         this("localhost", 3306, user ,pass);
     }
     public DBManagement(String hostname, int port, String user, String pass) throws SQLException {
+        this.DBName = "ATI";
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            connectDB = DriverManager.getConnection("jdbc:mysql://"+ hostname +":"+ port +"/ATI", user, pass);
+            String url = "jdbc:mysql://"+ hostname +":"+ port + "/" + DBName;
+            System.out.println(url);
+            connectDB = DriverManager.getConnection(url, user, pass);
             System.out.println("DataBase Connesso");
 
         } catch (ClassNotFoundException ex) {
@@ -33,5 +40,19 @@ public class DBManagement {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+
+    public List<String> getTablesName() throws SQLException {
+        DatabaseMetaData md = connectDB.getMetaData();
+        List<String> tabNames = new ArrayList<>();
+        /*ResultSet rs = md.getTables(null, "ATI", "%", null);*/
+        String query = " select table_name from information_schema.tables WHERE table_schema = '"+ DBName + '\'';
+        Statement stmt = connectDB.createStatement();
+        ResultSet rset = stmt.executeQuery(query);
+        while (rset.next()) {
+            tabNames.add( rset.getString(1) );
+        }
+        return tabNames;
     }
 }
