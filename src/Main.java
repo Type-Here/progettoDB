@@ -11,8 +11,8 @@ public class Main {
         JFrame mainFrame = new JFrame("ATI Management System");
         mainFrame.setLocationRelativeTo(null);
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        mainFrame.setPreferredSize(new Dimension(500, 400));
-        mainFrame.setSize(500,400);
+        mainFrame.setMinimumSize(new Dimension(500, 400));
+        mainFrame.setSize(900,800);
         mainFrame.add(GUI.getMainContainer());
         mainFrame.setVisible(true);
 

@@ -9,8 +9,12 @@ public class MainGUI {
     private JTable tableView;
     private JComboBox<Object> tabelleComboBox;
     private JButton cercaTabButton;
+    private JTextArea textAreaLog;
+
     private int attempts;
     DBManagement managerDB;
+    TableManager tableManager;
+    TextAreaManager textAreaManager;
 
     public MainGUI(){
         attempts = 1;
@@ -20,7 +24,17 @@ public class MainGUI {
             JOptionPane.showMessageDialog(this.getMainContainer(), "Connected");
         } else throw new RuntimeException("Unable to Connect");
 
-        getTableColumnNames();
+        textAreaManager = new TextAreaManager(textAreaLog);
+        tableManager = new TableManager(tableView, managerDB);
+
+        setTopPanel();
+        cercaTabButtonAction();
+
+        try {
+            tableManager.setTable("dipendente");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
 
     }
 
@@ -86,10 +100,10 @@ public class MainGUI {
     }
 
 
-    public void getTableColumnNames(){
-        List<String> tables;
+    public void setTopPanel(){
+        List<String> tables = null;
         try {
-            tables = managerDB.getTablesName();
+            tables = tableManager.getTableColumnNames();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -100,11 +114,19 @@ public class MainGUI {
         managerDB.closeConnection();
     }
 
-
-
     private Object makeObj(final String item)  {
         return new Object() { public String toString() { return item; } };
     }
 
+    private void cercaTabButtonAction(){
+        cercaTabButton.addActionListener( e -> {
+            String tab = tabelleComboBox.getSelectedItem().toString();
+            try {
+                tableManager.setTable(tab);
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+    }
 }
 
