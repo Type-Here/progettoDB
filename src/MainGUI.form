@@ -27,12 +27,16 @@
         <constraints>
           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
         </constraints>
-        <properties/>
+        <properties>
+          <foreground color="-2104859"/>
+        </properties>
         <border type="none"/>
         <children>
           <component id="99bfd" class="javax.swing.JComboBox" binding="tabelleComboBox">
             <constraints/>
-            <properties/>
+            <properties>
+              <toolTipText value="Seleziona la Tabella"/>
+            </properties>
           </component>
           <component id="14eb" class="javax.swing.JButton" binding="cercaTabButton">
             <constraints/>
@@ -49,11 +53,16 @@
           </grid>
         </constraints>
         <properties/>
-        <border type="none"/>
+        <border type="etched" title="Logs" title-justification="2">
+          <font/>
+          <title-color color="-15987700"/>
+        </border>
         <children>
           <component id="46853" class="javax.swing.JTextArea" binding="textAreaLog">
             <constraints/>
-            <properties/>
+            <properties>
+              <editable value="false"/>
+            </properties>
           </component>
         </children>
       </scrollpane>

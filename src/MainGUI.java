@@ -15,17 +15,22 @@ public class MainGUI {
     DBManagement managerDB;
     TableManager tableManager;
     TextAreaManager textAreaManager;
+    LoggerManager loggerManager;
 
     public MainGUI(){
         attempts = 1;
+        loggerManager = new LoggerManager();
         startDialog();
+
 
         if(managerDB.isConnected()){
             JOptionPane.showMessageDialog(this.getMainContainer(), "Connected");
         } else throw new RuntimeException("Unable to Connect");
 
+
         textAreaManager = new TextAreaManager(textAreaLog);
         tableManager = new TableManager(tableView, managerDB);
+        loggerManager.setTextAreaManager(textAreaManager);
 
         setTopPanel();
         cercaTabButtonAction();
@@ -78,7 +83,7 @@ public class MainGUI {
             //System.out.println( new String(pass.getPassword()) ); //Only DEBUG PURPOSES
 
             try {
-                this.managerDB = new DBManagement( user.getText(),  new String(pass.getPassword()) );
+                this.managerDB = new DBManagement( user.getText(),  new String(pass.getPassword()), loggerManager );
 
             } catch (SQLException e) {
                 if(this.attempts < 3){
@@ -120,11 +125,14 @@ public class MainGUI {
 
     private void cercaTabButtonAction(){
         cercaTabButton.addActionListener( e -> {
-            String tab = tabelleComboBox.getSelectedItem().toString();
-            try {
-                tableManager.setTable(tab);
-            } catch (SQLException ex) {
-                throw new RuntimeException(ex);
+            Object selected = tabelleComboBox.getSelectedItem();
+            if(selected != null) {
+                String tab = selected.toString();
+                try {
+                    tableManager.setTable(tab);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
     }

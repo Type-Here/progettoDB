@@ -1,4 +1,6 @@
 import javax.swing.*;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -9,9 +11,10 @@ import java.util.List;
 public class TableManager {
     private String tableName;
     private final List<String> tableColumnList;
-    private JTable table;
+    private final JTable table;
     private final DBManagement managerDB;
     private DefaultTableModel model;
+    private String actionMade;
 
     public TableManager(JTable table, DBManagement connectDB) {
         this.tableName = null;
@@ -46,7 +49,8 @@ public class TableManager {
 
 
     private void formatTable(){
-        model = new DefaultTableModel();
+        model = newModel(); //Vedi giù
+
         tableColumnList.forEach( n -> {
             model.addColumn(n);
         });
@@ -76,5 +80,16 @@ public class TableManager {
             }
             model.addRow(row.toArray());
         }
+    }
+
+    private DefaultTableModel newModel() {
+        DefaultTableModel newModel = new DefaultTableModel();
+        newModel.addTableModelListener(new TableModelListener() {
+            @Override
+            public void tableChanged(TableModelEvent e) {
+                    /*TODO*/
+            }
+        });
+        return newModel;
     }
 }
