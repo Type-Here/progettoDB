@@ -2,6 +2,7 @@ package it.unisa.progettodb.modify;
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.components.DatePickerSettings;
 import it.unisa.progettodb.DBManagement;
+import it.unisa.progettodb.datacontrol.ContentChecker;
 import it.unisa.progettodb.exceptions.InvalidTableSelectException;
 import it.unisa.progettodb.exceptions.NullTableException;
 import it.unisa.progettodb.exceptions.ValidatorException;
@@ -10,21 +11,20 @@ import javax.swing.*;
 import javax.swing.text.MaskFormatter;
 import java.awt.*;
 import java.sql.JDBCType;
-import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.time.DayOfWeek;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
 
 public class Insert extends JOptionPane implements DataManipulation{
     private final DBManagement managerDB;
     private final String workingTable;
     private final Component owner;
     private JPanel mainDialogPanel;
+    private HashMap<String, String> dataHashMap;  //K:Column - V:Value to Insert
+
     public Insert(Component owner, DBManagement managerDB, String workingTable) {
         super(null, JOptionPane.INFORMATION_MESSAGE, JOptionPane.OK_CANCEL_OPTION );
         this.managerDB = managerDB;
@@ -53,7 +53,11 @@ public class Insert extends JOptionPane implements DataManipulation{
             List<Integer> insertDataIndex = setPanel(metaData, dataType);
             int result = JOptionPane.showConfirmDialog(this.owner, mainDialogPanel, "Insert Data in Table", this.optionType, this.messageType);
             if(result == JOptionPane.OK_OPTION){
-                launchCheckDialog(metaData, insertDataIndex);
+
+                //K:Column - V:Value to Insert
+                dataHashMap = launchCheckThenDialog(metaData, insertDataIndex);
+                if(dataHashMap == null) return;
+                else sendDataToInsert();
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -88,6 +92,7 @@ public class Insert extends JOptionPane implements DataManipulation{
             JFormattedTextField textField;
             DatePicker datePicker;
 
+            //CHAR in MySQL has a Fixed size, so Precision is used to set TextSize viw MaskFormatter
             if(t.equals(JDBCType.CHAR)) {
                 StringBuilder format = new StringBuilder();
                 format.append("*".repeat(Math.max(0, metaData.getPrecision(i))));
@@ -104,6 +109,7 @@ public class Insert extends JOptionPane implements DataManipulation{
                 textField.setPreferredSize(new Dimension(200, 20));
                 rowPanel.add(textField);
 
+                //If Data is a Date
             } else if(t.equals(JDBCType.DATE)) {
                 DatePickerSettings datePickerSettings = new DatePickerSettings(Locale.ITALY);
                 datePickerSettings.setFirstDayOfWeek(DayOfWeek.MONDAY);
@@ -128,16 +134,19 @@ public class Insert extends JOptionPane implements DataManipulation{
                 textField.setPreferredSize(new Dimension(200, 20));
 
                 rowPanel.add(textField);
+
+                /* THIS IS IMPLEMENTATION SPECIFIC - NO BOOLEAN IN OUR DB HAS TO BE SET BY USER */
             } else if(t.equals(JDBCType.BIT) || t.equals(JDBCType.BOOLEAN)) {
                 continue;
 
-            } else {
+            } else { //Es VARCHAR
 
                 textField = new JFormattedTextField();
                 textField.setPreferredSize(new Dimension(200, 20));
 
                 rowPanel.add(textField);
             }
+
             insertDataIndex.add(i);
             mainDialogPanel.add(rowPanel);
             mainDialogPanel.setFocusTraversalKeysEnabled(true);
@@ -146,22 +155,86 @@ public class Insert extends JOptionPane implements DataManipulation{
         return insertDataIndex;
     }
 
-
-    private void launchCheckDialog(ResultSetMetaData metaData, List<Integer> insertDataIndex) {
+    /**
+     * After MainPanelDialog. New Dialog to verify data inserted before actually sending it.
+     * Before is performed a validation for some of more sensible data (IDs like Targa, Matricola ecc)
+     * @param metaData metaData of the table
+     * @param insertDataIndex list of indexes of the column used in main dialog (not all columns needs insertion)
+     */
+    private HashMap<String, String> launchCheckThenDialog(ResultSetMetaData metaData, List<Integer> insertDataIndex) throws SQLException {
         Component[] c = mainDialogPanel.getComponents();
         HashMap<String, String> values = new HashMap<>();
+        List<String> newData = new ArrayList<>();
 
-        /*TODO*/
+        /* Get Data Inserted in Previous Dialog and Add it in a List*/
+        for(Component component : c){
+            if (component instanceof JPanel internal){
+                Component[] internalComp = internal.getComponents();
 
-        for(Component comp : c){
-            if(comp instanceof JFormattedTextField f){
-                f.getText();
-            } else if(comp instanceof DatePicker d){
-                d.getText();
+                for(Component comp : internalComp){
+                    System.out.println(comp.getClass().getSimpleName());
+                    if(comp instanceof JFormattedTextField f){
+                        newData.add(f.getText());
+                    } else if(comp instanceof DatePicker d){
+                        newData.add(d.getText());
+                    }
+                }
+            } else {
+                throw new RuntimeException("Something getting info gone wrong");
             }
         }
-        JOptionPane.showMessageDialog(mainDialogPanel, "Sono qui");
+
+        if(newData.isEmpty()) throw new RuntimeException("Error Data is Empty");
+
+        /*Format for HashMap - Key: Data Name (name of column) -  Value: Data itself from list newData*/
+        for(Integer index : insertDataIndex){
+            values.put(metaData.getColumnName(index), newData.get(index - 1));
+        }
+
+        /*DATA CHECK*/
+        try {
+            ContentChecker.checker(values, this.workingTable);
+
+            //If Data is Valid Show Message Confirm Box.
+            if(finalCheckDialog(values) == JOptionPane.OK_OPTION){
+                return values;
+            } else {
+                return null;
+            }
+
+        } catch (ValidatorException e){
+            JOptionPane.showMessageDialog(this.mainDialogPanel, "Data Not Valid: \n" + e.getMessage(),
+                                            "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        return null;
     }
+
+    private int finalCheckDialog(HashMap<String, String> data){
+        JScrollPane scrollPane = new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        JTextArea textArea = new JTextArea();
+        textArea.setPreferredSize(new Dimension(400, 300));
+        textArea.setEditable(false);
+        textArea.setText("Dati Inseriti: \n");
+        for(Map.Entry<String, String> e : data.entrySet()){
+            textArea.append(' ' + e.getKey() + ": " + e.getValue() + " \n");
+        }
+        textArea.append("\nConfermi? \n");
+        scrollPane.add(textArea);
+
+        return JOptionPane.showConfirmDialog(this.mainDialogPanel, scrollPane, "Conferma Dati",
+                                        JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+    }
+
+
+    /**
+     * Last Method To Be Called.
+     * Send Data To Insertion.
+     */
+    private void sendDataToInsert() {
+        System.out.println(this.dataHashMap);
+        //managerDB.executeInsert(this.dataHashMap, this.workingTable);
+    }
+
 
     /**
      * Check if Data Type is a numerical value (int. double, float ...)
@@ -173,9 +246,17 @@ public class Insert extends JOptionPane implements DataManipulation{
                 || type.equals(JDBCType.FLOAT) || type.equals(JDBCType.INTEGER) || type.equals(JDBCType.DECIMAL));
     }
 
+
+    /**
+     * Check if Table can receive an insertion. (Ex You can't insert into a view)
+     * @param tableName Table to Check
+     * @return true if insertable, false if not
+     * @throws SQLException if check table is a view fails
+     */
     private boolean isInsertionAble(String tableName) throws SQLException {
         return (! managerDB.isAView(tableName) );
 
         //return ( tableName.equalsIgnoreCase("dipendentiView") || tableName.toLowerCase().contains("view") );
     }
+
 }

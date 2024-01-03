@@ -1,4 +1,4 @@
-package it.unisa.progettodb.tables;
+package it.unisa.progettodb.datacontrol;
 
 public abstract class ATI {
     public enum categorieEnum {AL("Alimentare"), TO("Tossico"),

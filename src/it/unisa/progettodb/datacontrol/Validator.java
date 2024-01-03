@@ -1,4 +1,4 @@
-package it.unisa.progettodb.tables;
+package it.unisa.progettodb.datacontrol;
 
 import it.unisa.progettodb.exceptions.CodiceMerceInvalidException;
 import it.unisa.progettodb.exceptions.CodiceSedeInvalidException;

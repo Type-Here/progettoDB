@@ -5,10 +5,7 @@ import it.unisa.progettodb.logs.LoggerManager;
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetProvider;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 @SuppressWarnings("CallToPrintStackTrace")
 public class DBManagement {
@@ -178,7 +175,7 @@ public class DBManagement {
         return rSet;
     }
 
-    public boolean executeInsert(String[] row, String tableName) throws SQLException {
+    public boolean executeInsert(HashMap<String, String> dataMap, String tableName) throws SQLException {
 
         return true;
     }
