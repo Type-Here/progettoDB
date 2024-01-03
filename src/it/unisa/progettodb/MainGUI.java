@@ -166,7 +166,6 @@ public class MainGUI {
 
         //Inserisci (Modifica)
         inserisciModifica.addActionListener(e ->{
-
             Insert insertPane = new Insert(this.getMainContainer(), this.managerDB, currentTable);
         });
         /*TODO*/

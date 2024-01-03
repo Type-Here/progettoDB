@@ -19,7 +19,12 @@ public class Trasportatore {
     }
 
 
-
+    /**
+     * Read Trasportatore from file. Gets Only Matricola!
+     * @param file file to read data from
+     * @return a list of Trasportatore
+     * @throws FileNotFoundException if file not found
+     */
     public static List<Trasportatore> getTrasportatoreFromFile(File file) throws FileNotFoundException {
         List<Trasportatore> trasportatori = new LinkedList<>();
         try( Scanner read = new Scanner(file) ){

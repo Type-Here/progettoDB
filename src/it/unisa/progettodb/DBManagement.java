@@ -1,7 +1,4 @@
 package it.unisa.progettodb;
-
-import com.mysql.cj.jdbc.result.CachedResultSetMetaData;
-import com.mysql.cj.jdbc.result.CachedResultSetMetaDataImpl;
 import it.unisa.progettodb.exceptions.NullTableException;
 import it.unisa.progettodb.logs.LoggerManager;
 
@@ -22,6 +19,8 @@ public class DBManagement {
     private LoggerManager loggerManager;
 
     public enum ActionEnum {Select, Insert, Update, GetSchemas, Connected, FetchDataType, FetchMetaData}
+
+    /* ===== CONSTRUCTORS ===== */
 
     public DBManagement(String user, String pass) throws SQLException {
         this("localhost", 3306, user ,pass);
@@ -49,6 +48,8 @@ public class DBManagement {
         }
     }
 
+    /* ===============  BASIC CONNECTION CONTROLS ================== */
+
     /**
      * Close Connection to DataBase
      */
@@ -72,6 +73,8 @@ public class DBManagement {
         }
     }
 
+    /* =================== METADATA FETCH ================= */
+
     /**
      * Get Names of Schemas in DataBase (Table Names)
      * @return list of string containing the names of
@@ -94,21 +97,61 @@ public class DBManagement {
     }
 
     /**
-     * Send Data to logs.LoggerManager if exists
-     * @param action action to log
+     * Fetch Data Type of tableName Table (DataType = Int, Double, ecc of JDBCType)
+     * @param tableName table to Fetch data from
+     * @return List of JDBCType for each column
+     * @throws SQLException if select and getMetaData fail
      */
-    private void sendToLog(ActionEnum action) {
-        if(this.loggerManager != null) loggerManager.log(action);
+    public List<JDBCType> fetchDataType(String tableName) throws SQLException {
+        if(tableName == null) throw new NullTableException();
+
+        List<JDBCType> dataType = new ArrayList<>();
+        try( ResultSet rSet = this.executeSelect(new String[]{"*"}, tableName) ){
+            for (int i = 1; i <= rSet.getMetaData().getColumnCount(); i++) {
+                int type = rSet.getMetaData().getColumnType(i);
+                dataType.add(JDBCType.valueOf(type));
+            }
+        }
+
+        this.sendToLog("On " + tableName, ActionEnum.FetchDataType);
+        return dataType;
     }
 
+
     /**
-     * Send Data to logs.LoggerManager if exists
-     * @param info String to add detail (used also to print query)
-     * @param action action to log
+     * Fetch ResultSetMetaData of a Table which name is tableName
+     * @param tableName table to Fetch data from
+     * @return a ResultSetMetaData containing all metadata from Table.
+     * @throws SQLException if select and getMetaData fail
      */
-    private void sendToLog(String info, ActionEnum action) {
-        if(this.loggerManager != null) loggerManager.log(info, action);
+    public ResultSetMetaData fetchMetaData(String tableName) throws SQLException {
+        if(tableName == null) throw new NullTableException();
+
+        ResultSetMetaData metaData;
+        CachedRowSet resultCached;
+
+        try( ResultSet rSet = this.executeSelect(new String[]{"*"}, tableName) ){
+            resultCached = RowSetProvider.newFactory().createCachedRowSet();
+            resultCached.populate(rSet);
+
+            metaData = resultCached.getMetaData();
+
+            resultCached.close();
+        }
+
+        this.sendToLog("On " + tableName, ActionEnum.FetchMetaData);
+        return metaData;
     }
+
+
+    public boolean isAView(String tableName) throws SQLException {
+        DatabaseMetaData dbm = connectDB.getMetaData();
+        try(ResultSet table = dbm.getTables(null, null, tableName, new String[]{"VIEW"}) ){
+            return table.first();
+        }
+    }
+
+    /* ================== MAIN QUERY EXECUTION ===================== */
 
     /**
      * Execute a SELECT row0, row1 [, ...] FROM TableName
@@ -135,40 +178,29 @@ public class DBManagement {
         return rSet;
     }
 
-    public List<JDBCType> fetchDataType(String tableName) throws SQLException {
-        if(tableName == null) throw new NullTableException();
+    public boolean executeInsert(String[] row, String tableName) throws SQLException {
 
-        List<JDBCType> dataType = new ArrayList<>();
-        try( ResultSet rSet = this.executeSelect(new String[]{"*"}, tableName) ){
-            for (int i = 1; i <= rSet.getMetaData().getColumnCount(); i++) {
-                int type = rSet.getMetaData().getColumnType(i);
-                dataType.add(JDBCType.valueOf(type));
-            }
-        }
-
-        this.sendToLog("On " + tableName, ActionEnum.FetchDataType);
-        return dataType;
-    }
-
-    public ResultSetMetaData fetchMetaData(String tableName) throws SQLException {
-        if(tableName == null) throw new NullTableException();
-
-        ResultSetMetaData metaData;
-        CachedRowSet resultCached;
-
-        try( ResultSet rSet = this.executeSelect(new String[]{"*"}, tableName) ){
-            resultCached = RowSetProvider.newFactory().createCachedRowSet();
-            resultCached.populate(rSet);
-
-            metaData = resultCached.getMetaData();
-
-            resultCached.close();
-        }
-
-        this.sendToLog("On " + tableName, ActionEnum.FetchMetaData);
-        return metaData;
+        return true;
     }
 
 
+    /* ================== LOGS METOHDS ==================== */
+
+    /**
+     * Send Data to logs.LoggerManager if exists
+     * @param action action to log
+     */
+    private void sendToLog(ActionEnum action) {
+        if(this.loggerManager != null) loggerManager.log(action);
+    }
+
+    /**
+     * Send Data to logs.LoggerManager if exists
+     * @param info String to add detail (used also to print query)
+     * @param action action to log
+     */
+    private void sendToLog(String info, ActionEnum action) {
+        if(this.loggerManager != null) loggerManager.log(info, action);
+    }
 
 }
