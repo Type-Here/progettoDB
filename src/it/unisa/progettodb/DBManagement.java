@@ -1,8 +1,12 @@
 package it.unisa.progettodb;
 
+import com.mysql.cj.jdbc.result.CachedResultSetMetaData;
+import com.mysql.cj.jdbc.result.CachedResultSetMetaDataImpl;
 import it.unisa.progettodb.exceptions.NullTableException;
 import it.unisa.progettodb.logs.LoggerManager;
 
+import javax.sql.rowset.CachedRowSet;
+import javax.sql.rowset.RowSetProvider;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,7 +21,7 @@ public class DBManagement {
     private ResultSet rSet;
     private LoggerManager loggerManager;
 
-    public enum ActionEnum {Select, Insert, Update, GetSchemas, Connected, FetchDataType}
+    public enum ActionEnum {Select, Insert, Update, GetSchemas, Connected, FetchDataType, FetchMetaData}
 
     public DBManagement(String user, String pass) throws SQLException {
         this("localhost", 3306, user ,pass);
@@ -145,6 +149,26 @@ public class DBManagement {
         this.sendToLog("On " + tableName, ActionEnum.FetchDataType);
         return dataType;
     }
+
+    public ResultSetMetaData fetchMetaData(String tableName) throws SQLException {
+        if(tableName == null) throw new NullTableException();
+
+        ResultSetMetaData metaData;
+        CachedRowSet resultCached;
+
+        try( ResultSet rSet = this.executeSelect(new String[]{"*"}, tableName) ){
+            resultCached = RowSetProvider.newFactory().createCachedRowSet();
+            resultCached.populate(rSet);
+
+            metaData = resultCached.getMetaData();
+
+            resultCached.close();
+        }
+
+        this.sendToLog("On " + tableName, ActionEnum.FetchMetaData);
+        return metaData;
+    }
+
 
 
 }
