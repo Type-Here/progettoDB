@@ -175,6 +175,13 @@ public class DBManagement {
         return rSet;
     }
 
+    /**
+     * Execute INSERT in Table.
+     * Use a Prepared Statement For Sending Data.
+     * @param dataMap HashMap: K: String with Column Name, E: Data in Object Format see {@link it.unisa.progettodb.datacontrol.ContentPackage#returnDataForQuery(List)}
+     * @param tableName Table Name Where Insertion will be performed (String)
+     * @throws SQLException if Insert Fails
+     */
     public void executeInsert(HashMap<String, Object> dataMap, String tableName) throws SQLException {
         StringBuilder buildIns = new StringBuilder();
         StringBuilder buildVal = new StringBuilder();

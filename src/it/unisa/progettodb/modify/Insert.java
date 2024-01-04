@@ -35,9 +35,12 @@ public class Insert extends JOptionPane implements DataManipulation{
     }
 
     /**
+     * MAIN CONTROL METHOD:
      * Create Dialog for Insertion in Table.
      * Check if table is not null or is Not Possible to Insert (ex a view).
      * Fetch Data with managerDB.fetchMetaData and .fetchDataType
+     * Then Call launchCheckThenDialog to confirm data.
+     * Then if all ok call sendDataToInsert() to execute query by managerDB.
      */
     @Override
     public void createDialog(){
@@ -48,25 +51,37 @@ public class Insert extends JOptionPane implements DataManipulation{
             if(this.workingTable == null) throw new NullTableException();
             if(!isInsertionAble(this.workingTable)) throw new InvalidTableSelectException();
 
+            /*Fetch MetaData*/
             metaData = managerDB.fetchMetaData(this.workingTable);
             dataType = managerDB.fetchDataType(this.workingTable);
 
+            /*Open Main Dialog for USer Input*/
             HashMap<Integer, JDBCType> insertDataIndexType = setPanel(metaData, dataType);
             int result = JOptionPane.showConfirmDialog(this.owner, mainDialogPanel, "Insert Data in Table", this.optionType, this.messageType);
-            if(result == JOptionPane.OK_OPTION) {
 
+            if(result == JOptionPane.OK_OPTION) { //Else User Pressed Cancel so Return
 
-                contentPackageList = launchCheckThenDialog(metaData, insertDataIndexType);
+                /*Validate Data then Open Confirmation Dialog*/
+                contentPackageList = formatAndValidateData(metaData, insertDataIndexType);
 
-                if (contentPackageList != null) sendDataToInsert();
-                else throw new RuntimeException("Something Went Wrong");
+                //If Data is Valid Show Message Confirm Box. So SUer Can Confirm
+                if(finalCheckDialog(ContentPackage.returnDataMapAsString(contentPackageList)) == JOptionPane.OK_OPTION){
+                    /*Final Content, if not null (operation annulled by user, then send data to managerDB to Insert */
+                    if (contentPackageList != null) sendDataToInsert();
+                }
+
 
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
+
         } catch (NullTableException | InvalidTableSelectException e){
             JOptionPane.showMessageDialog(this.owner, e.getMessage() + "\nSeleziona (altra) Tabella e Riprova",
                                         "Attenzione", JOptionPane.ERROR_MESSAGE);
+
+        } catch (ValidatorException e) {
+            JOptionPane.showMessageDialog(this.mainDialogPanel, "Data Not Valid: \n" + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -150,13 +165,14 @@ public class Insert extends JOptionPane implements DataManipulation{
     }
 
     /**
-     * After MainPanelDialog. New Dialog to verify data inserted before actually sending it.
+     * After MainPanelDialog.
      * Before is performed a validation for some of more sensible data (IDs like Targa, Matricola ecc)
      *
      * @param metaData            metaData of the table
      * @param insertDataIndexType HashMap list of indexes of the column used in main dialog (not all columns needs insertion) - JDBCType OF Column
+     * @return List of ContentPackage each containing Index, JDBCType, User Inserted Data (String), Column Name.
      */
-    private List<ContentPackage> launchCheckThenDialog(ResultSetMetaData metaData, HashMap<Integer, JDBCType> insertDataIndexType) throws SQLException {
+    private List<ContentPackage> formatAndValidateData(ResultSetMetaData metaData, HashMap<Integer, JDBCType> insertDataIndexType) throws SQLException, ValidatorException {
         Component[] c = mainDialogPanel.getComponents();
 
         List<String> newData = new ArrayList<>();
@@ -182,8 +198,14 @@ public class Insert extends JOptionPane implements DataManipulation{
 
         if(newData.isEmpty()) throw new RuntimeException("Error Data is Empty");
 
-        /*TODO*/
-        /*Format for HashMap - Key: Data Name (name of column) -  Value: Data itself from list newData*/
+        /*FORMAT DATA in Content Package*/
+
+        /* Format
+         * - From HashMap - Key: Index of column -  Value: JDBC Type
+         * - From medaData for ColumnName
+         * - From newData list containing data inserted by user in string format
+         * Saved in ContentPackage Object
+         * Stored in List contentePackageList */
         for(Map.Entry<Integer,JDBCType> e : insertDataIndexType.entrySet()){
             int index = e.getKey();
             ContentPackage content = new ContentPackage(index, newData.get(index - 1),
@@ -194,43 +216,35 @@ public class Insert extends JOptionPane implements DataManipulation{
         System.out.println(contentPackageList);
 
         /*DATA CHECK*/
-        try {
-            ContentChecker.checker(ContentPackage.returnDataMapAsString(contentPackageList), this.workingTable);
-            /*TODO*/
-            //If Data is Valid Show Message Confirm Box.
-            if(finalCheckDialog(ContentPackage.returnDataMapAsString(contentPackageList)) == JOptionPane.OK_OPTION){
-                return contentPackageList;
-            } else {
-                return null;
-            }
 
-        } catch (ValidatorException e){
-            JOptionPane.showMessageDialog(this.mainDialogPanel, "Data Not Valid: \n" + e.getMessage(),
-                                            "Error", JOptionPane.ERROR_MESSAGE);
-        }
-        return null;
+        /*Automatic Validation of Data*/
+        if(ContentChecker.checker(ContentPackage.returnDataMapAsString(contentPackageList), this.workingTable))
+            return contentPackageList;
+        throw new RuntimeException("Something Went Wrong");
     }
 
     /**
+     * New Dialog to verify data inserted before actually sending it.
      * Set Second Panel before Finalizing Insert Query
      * Let User Control if Data is Correct
-     * @param data hashmap to print
+     * @param data hashmap in string, string format to print (K:column name, E:data)
      * @return JOptionPane.OK_OPTION value if user confirm, CANCEL otherwise
      */
     private int finalCheckDialog(HashMap<String, String> data){
-        JScrollPane scrollPane = new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setPreferredSize(new Dimension(400, 300));
+        JScrollPane scrollPane = new JScrollPane( JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setPreferredSize(new Dimension(300, 200));
 
         JTextArea textArea = new JTextArea();
-        textArea.setPreferredSize(new Dimension(400, 300));
+        textArea.setPreferredSize(new Dimension(250, 150));
         textArea.setEditable(false);
-        textArea.setText("Dati Inseriti: \n");
+        textArea.setFont(new Font(Font.DIALOG, Font.PLAIN, 12));
+        textArea.setText("Dati Inseriti: \n\n");
 
         for(Map.Entry<String, String> e : data.entrySet()){
             textArea.append(' ' + e.getKey() + ": " + e.getValue() + " \n");
         }
         textArea.append("\nConfermi? \n");
-        scrollPane.add(textArea);
+        scrollPane.setViewportView(textArea);
 
         return JOptionPane.showConfirmDialog(this.mainDialogPanel, scrollPane, "Conferma Dati",
                                         JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);

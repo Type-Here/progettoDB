@@ -3,7 +3,6 @@ package it.unisa.progettodb.datacontrol;
 import java.sql.JDBCType;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ContentPackage {
     private final int index;
@@ -36,7 +35,15 @@ public class ContentPackage {
         return type;
     }
 
-
+    /**
+     * FORMAT FOR QUERY
+     * Static Method
+     * Format Data For PreparedStatement Query in DBManagement Object.
+     * Each DataString is transformed to its Object (es. if int -> parsed to integer) Based on its JBDCType.
+     * A HashMap&lt;String,Object&gt; is Created.
+     * @param contentPackageList List of ContentPackages to Transform
+     * @return HashMap&lt;String,Object&gt; K: Column Name, E:Object of Data
+     */
     public static HashMap<String, Object> returnDataForQuery(List<ContentPackage> contentPackageList){
         HashMap<String, Object> resultObjectMap = new HashMap<>();
         for(ContentPackage c: contentPackageList){
@@ -46,7 +53,14 @@ public class ContentPackage {
         return resultObjectMap;
     }
 
-
+    /**
+     * FORMAT FOR PRINT
+     * Static Method
+     * Format Data For View (String - String)
+     * A HashMap&lt;String,Object&gt; is Created With K: Column Name - E: Data in String Format.
+     * @param contentPackageList List of ContentPackages to Transform
+     * @return HashMap&lt;String,Object&gt; K: Column Name, E:Data in String Format
+     */
     public static HashMap<String, String> returnDataMapAsString(List<ContentPackage> contentPackageList){
         HashMap<String, String> resultStringMap = new HashMap<>();
         for(ContentPackage c: contentPackageList){
