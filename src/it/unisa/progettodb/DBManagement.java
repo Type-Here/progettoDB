@@ -187,8 +187,7 @@ public class DBManagement {
             if(i++ == 0) {
                 buildIns.append(e.getKey());
                 buildVal.append("?");
-            }
-            else  {
+            } else {
                 buildIns.append(",").append(e.getKey());
                 buildVal.append(",?");
             }

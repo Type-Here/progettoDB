@@ -50,12 +50,12 @@ public class Insert extends JOptionPane implements DataManipulation{
             metaData = managerDB.fetchMetaData(this.workingTable);
             dataType = managerDB.fetchDataType(this.workingTable);
 
-            List<Integer> insertDataIndex = setPanel(metaData, dataType);
+            HashMap<Integer, JDBCType> insertDataIndexType = setPanel(metaData, dataType);
             int result = JOptionPane.showConfirmDialog(this.owner, mainDialogPanel, "Insert Data in Table", this.optionType, this.messageType);
             if(result == JOptionPane.OK_OPTION){
 
                 //K:Column - V:Value to Insert
-                dataHashMap = launchCheckThenDialog(metaData, insertDataIndex);
+                dataHashMap = launchCheckThenDialog(metaData, insertDataIndexType);
                 if(dataHashMap == null) return;
                 else sendDataToInsert();
             }
@@ -74,10 +74,11 @@ public class Insert extends JOptionPane implements DataManipulation{
      * @param dataType List of JBDC Type, 1 for each column containing type (int, double...) of each column
      * @throws SQLException if getMetaData fails
      */
-    private List<Integer> setPanel(ResultSetMetaData metaData, List<JDBCType> dataType) throws SQLException {
+    private  HashMap<Integer, JDBCType> setPanel(ResultSetMetaData metaData, List<JDBCType> dataType) throws SQLException {
 
         //Save Index of MetaData Column that will be visible in Dialog Pane.
         List<Integer> insertDataIndex = new ArrayList<>();
+        HashMap<Integer, JDBCType> insertDataIndexType = new HashMap<>();
 
         mainDialogPanel = new JPanel(new GridLayout(dataType.size(), 2));
         int i = 1;
@@ -146,22 +147,22 @@ public class Insert extends JOptionPane implements DataManipulation{
 
                 rowPanel.add(textField);
             }
-
+            insertDataIndexType.put(i, t);
             insertDataIndex.add(i);
             mainDialogPanel.add(rowPanel);
             mainDialogPanel.setFocusTraversalKeysEnabled(true);
             ++i;
         }
-        return insertDataIndex;
+        return insertDataIndexType;
     }
 
     /**
      * After MainPanelDialog. New Dialog to verify data inserted before actually sending it.
      * Before is performed a validation for some of more sensible data (IDs like Targa, Matricola ecc)
      * @param metaData metaData of the table
-     * @param insertDataIndex list of indexes of the column used in main dialog (not all columns needs insertion)
+     * @param insertDataIndexType HashMap list of indexes of the column used in main dialog (not all columns needs insertion) - JDBCType OF Column
      */
-    private HashMap<String, String> launchCheckThenDialog(ResultSetMetaData metaData, List<Integer> insertDataIndex) throws SQLException {
+    private HashMap<String, String> launchCheckThenDialog(ResultSetMetaData metaData,  HashMap<Integer, JDBCType> insertDataIndexType) throws SQLException {
         Component[] c = mainDialogPanel.getComponents();
         HashMap<String, String> values = new HashMap<>();
         List<String> newData = new ArrayList<>();
@@ -186,15 +187,17 @@ public class Insert extends JOptionPane implements DataManipulation{
 
         if(newData.isEmpty()) throw new RuntimeException("Error Data is Empty");
 
+        /*TODO*/
         /*Format for HashMap - Key: Data Name (name of column) -  Value: Data itself from list newData*/
-        for(Integer index : insertDataIndex){
+        for(Map.Entry<Integer,JDBCType> e : insertDataIndexType.entrySet()){
+            int index = e.getKey();
             values.put(metaData.getColumnName(index), newData.get(index - 1));
         }
 
         /*DATA CHECK*/
         try {
             ContentChecker.checker(values, this.workingTable);
-
+            /*TODO*/
             //If Data is Valid Show Message Confirm Box.
             if(finalCheckDialog(values) == JOptionPane.OK_OPTION){
                 return values;
@@ -209,12 +212,21 @@ public class Insert extends JOptionPane implements DataManipulation{
         return null;
     }
 
+    /**
+     * Set Second Panel before Finalizing Insert Query
+     * Let User Control if Data is Correct
+     * @param data hashmap to print
+     * @return JOptionPane.OK_OPTION value if user confirm, CANCEL otherwise
+     */
     private int finalCheckDialog(HashMap<String, String> data){
         JScrollPane scrollPane = new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setPreferredSize(new Dimension(400, 300));
+
         JTextArea textArea = new JTextArea();
         textArea.setPreferredSize(new Dimension(400, 300));
         textArea.setEditable(false);
         textArea.setText("Dati Inseriti: \n");
+
         for(Map.Entry<String, String> e : data.entrySet()){
             textArea.append(' ' + e.getKey() + ": " + e.getValue() + " \n");
         }

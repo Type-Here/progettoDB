@@ -52,6 +52,9 @@ public class ContentChecker {
 
             } else if( e.getKey().equalsIgnoreCase("targa") ){
                 Validator.validateTargaMezzo(e.getValue());
+
+            } else if( e.getKey().equalsIgnoreCase("codicesede") ){
+                Validator.validateCodiceSede(e.getValue());
             }
         }
         return true;
