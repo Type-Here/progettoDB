@@ -228,11 +228,15 @@ public class Insert extends JOptionPane implements DataManipulation{
 
     /**
      * Last Method To Be Called.
-     * Send Data To Insertion.
+     * Send Data To Insertion. Dialog if Fails.
      */
     private void sendDataToInsert() {
         System.out.println(this.dataHashMap);
-        //managerDB.executeInsert(this.dataHashMap, this.workingTable);
+        try {
+            managerDB.executeInsert(this.dataHashMap, this.workingTable);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this.mainDialogPanel, "Error: \n" + e.getMessage(), "Errore SQL", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
 
