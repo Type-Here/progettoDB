@@ -6,6 +6,6 @@ public class MatricolaInvalidException extends ValidatorException {
     }
 
     public MatricolaInvalidException(String message) {
-        super(message);
+        super("Matricola Non Valida o Formato Non Valido\n " + message);
     }
 }

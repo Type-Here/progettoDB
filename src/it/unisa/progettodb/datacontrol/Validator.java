@@ -5,9 +5,13 @@ import it.unisa.progettodb.exceptions.CodiceSedeInvalidException;
 import it.unisa.progettodb.exceptions.MatricolaInvalidException;
 import it.unisa.progettodb.exceptions.TargaInvalidException;
 
+/**
+ * THIS VALIDATOR IS HIGHLY DATABASE SPECIFIC
+ */
+
 public class Validator {
     public static void validateMatricola(String matricola) throws MatricolaInvalidException {
-        if(matricola.matches("[A-Z]{2}[0-9]{4}")) throw new MatricolaInvalidException();
+        if(!matricola.matches("[A-Z]{2}[0-9]{4}")) throw new MatricolaInvalidException(matricola);
     }
 
     public static void validateCodiceMerce(String codiceMerce) throws CodiceMerceInvalidException {

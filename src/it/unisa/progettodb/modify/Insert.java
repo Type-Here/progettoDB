@@ -3,6 +3,7 @@ import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.components.DatePickerSettings;
 import it.unisa.progettodb.DBManagement;
 import it.unisa.progettodb.datacontrol.ContentChecker;
+import it.unisa.progettodb.datacontrol.ContentPackage;
 import it.unisa.progettodb.exceptions.InvalidTableSelectException;
 import it.unisa.progettodb.exceptions.NullTableException;
 import it.unisa.progettodb.exceptions.ValidatorException;
@@ -23,7 +24,7 @@ public class Insert extends JOptionPane implements DataManipulation{
     private final String workingTable;
     private final Component owner;
     private JPanel mainDialogPanel;
-    private HashMap<String, String> dataHashMap;  //K:Column - V:Value to Insert
+    private List<ContentPackage> contentPackageList;
 
     public Insert(Component owner, DBManagement managerDB, String workingTable) {
         super(null, JOptionPane.INFORMATION_MESSAGE, JOptionPane.OK_CANCEL_OPTION );
@@ -52,12 +53,14 @@ public class Insert extends JOptionPane implements DataManipulation{
 
             HashMap<Integer, JDBCType> insertDataIndexType = setPanel(metaData, dataType);
             int result = JOptionPane.showConfirmDialog(this.owner, mainDialogPanel, "Insert Data in Table", this.optionType, this.messageType);
-            if(result == JOptionPane.OK_OPTION){
+            if(result == JOptionPane.OK_OPTION) {
 
-                //K:Column - V:Value to Insert
-                dataHashMap = launchCheckThenDialog(metaData, insertDataIndexType);
-                if(dataHashMap == null) return;
-                else sendDataToInsert();
+
+                contentPackageList = launchCheckThenDialog(metaData, insertDataIndexType);
+
+                if (contentPackageList != null) sendDataToInsert();
+                else throw new RuntimeException("Something Went Wrong");
+
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -77,7 +80,6 @@ public class Insert extends JOptionPane implements DataManipulation{
     private  HashMap<Integer, JDBCType> setPanel(ResultSetMetaData metaData, List<JDBCType> dataType) throws SQLException {
 
         //Save Index of MetaData Column that will be visible in Dialog Pane.
-        List<Integer> insertDataIndex = new ArrayList<>();
         HashMap<Integer, JDBCType> insertDataIndexType = new HashMap<>();
 
         mainDialogPanel = new JPanel(new GridLayout(dataType.size(), 2));
@@ -119,19 +121,8 @@ public class Insert extends JOptionPane implements DataManipulation{
                 rowPanel.add(datePicker);
 
             } else if (isNumber(t)) {
-                StringBuilder format = new StringBuilder();
-                format.append("*".repeat(Math.max(0, metaData.getPrecision(i))));
 
-                MaskFormatter formatter; //with however many characters you need
-                try {
-                    formatter = new MaskFormatter(format.toString());
-                } catch (ParseException e) {
-                    throw new RuntimeException(e);
-                }
-
-                formatter.setValidCharacters("0123456789."); // whatever characters you would use
-
-                textField = new JFormattedTextField(formatter);
+                textField = new JFormattedTextField();
                 textField.setPreferredSize(new Dimension(200, 20));
 
                 rowPanel.add(textField);
@@ -147,25 +138,29 @@ public class Insert extends JOptionPane implements DataManipulation{
 
                 rowPanel.add(textField);
             }
+
             insertDataIndexType.put(i, t);
-            insertDataIndex.add(i);
+
             mainDialogPanel.add(rowPanel);
             mainDialogPanel.setFocusTraversalKeysEnabled(true);
             ++i;
         }
+
         return insertDataIndexType;
     }
 
     /**
      * After MainPanelDialog. New Dialog to verify data inserted before actually sending it.
      * Before is performed a validation for some of more sensible data (IDs like Targa, Matricola ecc)
-     * @param metaData metaData of the table
+     *
+     * @param metaData            metaData of the table
      * @param insertDataIndexType HashMap list of indexes of the column used in main dialog (not all columns needs insertion) - JDBCType OF Column
      */
-    private HashMap<String, String> launchCheckThenDialog(ResultSetMetaData metaData,  HashMap<Integer, JDBCType> insertDataIndexType) throws SQLException {
+    private List<ContentPackage> launchCheckThenDialog(ResultSetMetaData metaData, HashMap<Integer, JDBCType> insertDataIndexType) throws SQLException {
         Component[] c = mainDialogPanel.getComponents();
-        HashMap<String, String> values = new HashMap<>();
+
         List<String> newData = new ArrayList<>();
+        List<ContentPackage> contentPackageList = new ArrayList<>();
 
         /* Get Data Inserted in Previous Dialog and Add it in a List*/
         for(Component component : c){
@@ -173,11 +168,11 @@ public class Insert extends JOptionPane implements DataManipulation{
                 Component[] internalComp = internal.getComponents();
 
                 for(Component comp : internalComp){
-                    System.out.println(comp.getClass().getSimpleName());
+
                     if(comp instanceof JFormattedTextField f){
                         newData.add(f.getText());
                     } else if(comp instanceof DatePicker d){
-                        newData.add(d.getText());
+                        newData.add(d.getDate().toString());
                     }
                 }
             } else {
@@ -191,16 +186,20 @@ public class Insert extends JOptionPane implements DataManipulation{
         /*Format for HashMap - Key: Data Name (name of column) -  Value: Data itself from list newData*/
         for(Map.Entry<Integer,JDBCType> e : insertDataIndexType.entrySet()){
             int index = e.getKey();
-            values.put(metaData.getColumnName(index), newData.get(index - 1));
+            ContentPackage content = new ContentPackage(index, newData.get(index - 1),
+                                            metaData.getColumnName(index), e.getValue() );
+            contentPackageList.add(content);
         }
+
+        System.out.println(contentPackageList);
 
         /*DATA CHECK*/
         try {
-            ContentChecker.checker(values, this.workingTable);
+            ContentChecker.checker(ContentPackage.returnDataMapAsString(contentPackageList), this.workingTable);
             /*TODO*/
             //If Data is Valid Show Message Confirm Box.
-            if(finalCheckDialog(values) == JOptionPane.OK_OPTION){
-                return values;
+            if(finalCheckDialog(ContentPackage.returnDataMapAsString(contentPackageList)) == JOptionPane.OK_OPTION){
+                return contentPackageList;
             } else {
                 return null;
             }
@@ -243,9 +242,9 @@ public class Insert extends JOptionPane implements DataManipulation{
      * Send Data To Insertion. Dialog if Fails.
      */
     private void sendDataToInsert() {
-        System.out.println(this.dataHashMap);
+
         try {
-            managerDB.executeInsert(this.dataHashMap, this.workingTable);
+            managerDB.executeInsert(ContentPackage.returnDataForQuery(this.contentPackageList), this.workingTable);
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this.mainDialogPanel, "Error: \n" + e.getMessage(), "Errore SQL", JOptionPane.ERROR_MESSAGE);
         }

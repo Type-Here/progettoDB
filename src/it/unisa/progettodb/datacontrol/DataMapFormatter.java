@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 public class DataMapFormatter {
-    public static HashMap<String,Object> formatData(ResultSetMetaData metaData, List<String> newData,
+    private static HashMap<String,Object> formatData(ResultSetMetaData metaData, List<String> newData,
                                                     HashMap<Integer, JDBCType> dataIndexType) throws SQLException {
 
         HashMap<String,Object> dataFormatted = new HashMap<>();
@@ -19,7 +19,7 @@ public class DataMapFormatter {
         return dataFormatted;
     }
 
-    private static Object objectFromData(JDBCType type, String data){
+    public static Object objectFromData(JDBCType type, String data){
         if(type == JDBCType.BOOLEAN || type == JDBCType.TINYINT){
             return Boolean.parseBoolean(data);
 

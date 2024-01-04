@@ -175,7 +175,7 @@ public class DBManagement {
         return rSet;
     }
 
-    public void executeInsert(HashMap<String, String> dataMap, String tableName) throws SQLException {
+    public void executeInsert(HashMap<String, Object> dataMap, String tableName) throws SQLException {
         StringBuilder buildIns = new StringBuilder();
         StringBuilder buildVal = new StringBuilder();
         buildIns.append("INSERT INTO ").append(tableName).append(" (");
@@ -183,7 +183,7 @@ public class DBManagement {
         // Statement could be also created here but prone to SQL Injection.
         // So This Add Controlled Data (Column Names and Number of Values)
         int i = 0;
-        for(Map.Entry<String, String> e : dataMap.entrySet()){
+        for(Map.Entry<String, Object> e : dataMap.entrySet()){
             if(i++ == 0) {
                 buildIns.append(e.getKey());
                 buildVal.append("?");
@@ -196,13 +196,13 @@ public class DBManagement {
 
         PreparedStatement pStmt = connectDB.prepareStatement(buildIns.toString());
 
-        /*for(Map.Entry<String, String> e : dataMap.entrySet()){
-
+        i = 1;
+        for(Map.Entry<String, Object> e : dataMap.entrySet()){
+            pStmt.setObject(i++, e.getValue());
         }
-        pStmt.setString(1, "Val 1");
-        pStmt.setString(2, "Val 2");
-        pStmt.executeUpdate();*/
-        sendToLog(buildIns.toString(), ActionEnum.Insert);
+
+        /*pStmt.executeUpdate();*/
+        sendToLog(pStmt.toString(), ActionEnum.Insert);
     }
 
 
