@@ -35,7 +35,7 @@ public class TableManager {
      * Select * From tableName
      * Updates Column Names in List, Reformat the table columns and add data rows
      * @param tableName Name of SQL Table to Draw
-     * @throws SQLException if Select Failed
+     * @throws SQLException if Select Data Failed
      */
     public void setTable(String tableName) throws SQLException {
         this.tableName = tableName;
@@ -44,6 +44,14 @@ public class TableManager {
             formatTable();
             setTableRows(rSet);
         }
+    }
+
+    /**
+     * Reload The Current Working Table When Prompted
+     * @throws SQLException if Select data failed
+     */
+    public void reloadTable() throws SQLException {
+        this.setTable(this.tableName);
     }
 
     /**

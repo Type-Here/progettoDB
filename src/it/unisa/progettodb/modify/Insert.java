@@ -31,7 +31,6 @@ public class Insert extends JOptionPane implements DataManipulation{
         this.managerDB = managerDB;
         this.workingTable = workingTable;
         this.owner = owner;
-        createDialog();
     }
 
     /**
@@ -43,7 +42,7 @@ public class Insert extends JOptionPane implements DataManipulation{
      * Then if all ok call sendDataToInsert() to execute query by managerDB.
      */
     @Override
-    public void createDialog(){
+    public boolean createDialog(){
         List<JDBCType> dataType;
         ResultSetMetaData metaData;
 
@@ -68,10 +67,10 @@ public class Insert extends JOptionPane implements DataManipulation{
                 if(finalCheckDialog(ContentPackage.returnDataMapAsString(contentPackageList)) == JOptionPane.OK_OPTION){
                     /*Final Content, if not null (operation annulled by user, then send data to managerDB to Insert */
                     if (contentPackageList != null) sendDataToInsert();
+                    return true;
                 }
-
-
             }
+            return false;
         } catch (SQLException e) {
             throw new RuntimeException(e);
 
@@ -83,6 +82,7 @@ public class Insert extends JOptionPane implements DataManipulation{
             JOptionPane.showMessageDialog(this.mainDialogPanel, "Data Not Valid: \n" + e.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
+        return false;
     }
 
 

@@ -182,11 +182,18 @@ public class MainGUI {
 
         this.eliminaButton.addActionListener(e ->{
             int selectedRow = this.tableView.getSelectedRow();
-            System.out.println("Riga selezionata: " + selectedRow);
+
             if( selectedRow >= 0){
 
                 Delete deletePane = new Delete(this.getMainContainer(), this.managerDB,
                         this.currentTable, tableManager.getRowContentPacakgeList(selectedRow));
+                if(deletePane.createDialog()) {
+                    try {
+                        this.tableManager.reloadTable();
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
             } else {
                 JOptionPane.showMessageDialog(this.getMainContainer(), "No Row Selected in Table.",
                         "No Row Selected", JOptionPane.INFORMATION_MESSAGE);
@@ -242,6 +249,13 @@ public class MainGUI {
         //Inserisci (Modifica)
         inserisciModifica.addActionListener(e ->{
             Insert insertPane = new Insert(this.getMainContainer(), this.managerDB, this.currentTable);
+            if(insertPane.createDialog()) {
+                try {
+                    this.tableManager.reloadTable();
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
         });
 
         //Elimina (Modifica)
