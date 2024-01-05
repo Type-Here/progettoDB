@@ -59,11 +59,13 @@ public class MainGUI {
         cercaTabButtonAction();
 
         /*Modify Data Listeners*/
-        modifyAndDeleteButtonAction();
+        setModifyAndDeleteButtonAction();
+
+        setComboBoxListener();
     }
 
 
-    /* ------ PUBLIC METHODS ------ */
+    /* ---------------------------- PUBLIC METHODS --------------------- */
 
     /**
      * Getter for the Main JPanel. Used for adding it to JFrame
@@ -81,19 +83,6 @@ public class MainGUI {
         return this.menuBar;
     }
 
-    /**
-     * Sets JPanel topPanel.
-     * Used to Updated JComboBox after each change of Table View.
-     */
-    public void setTopPanel(){
-        List<String> tables;
-        try {
-            tables = tableManager.getSchemasNames();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        tables.forEach(n -> tabelleComboBox.addItem(makeObj(n)));
-    }
 
     /**
      * Close connection to Database
@@ -134,7 +123,7 @@ public class MainGUI {
 
         this.tableView.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); //Enable User to Select Only 1 Row
 
-        /*THIS CALL A DATABASE SPECIFIC CONTROL ON WICH TABLE USER CAN DELETE*/
+        /*THIS CALL A DATABASE SPECIFIC CONTROL ON WHICH TABLE USER CAN DELETE*/
         /*When Selected Row in Table Enable Modify Button and Delete Button (only on appropriate tables) */
         this.tableView.getSelectionModel().addListSelectionListener( ev -> {
             if(this.tableView.getSelectedRow() >= 0){
@@ -168,6 +157,7 @@ public class MainGUI {
                 try {
                     tableManager.setTable(tab);
                     this.currentTable = tab;
+                    this.cercaTabButton.setText("Reload");
                 } catch (SQLException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -175,11 +165,18 @@ public class MainGUI {
         });
     }
 
-    private void modifyAndDeleteButtonAction() {
+    /**
+     * This Method Sets Listeners for:
+     * - Modify Button
+     * - Delete Button
+     * in topPanel
+     */
+    private void setModifyAndDeleteButtonAction() {
         this.modificaButton.addActionListener(e ->{
 
         });
 
+        /* - Delete Button Listener - */
         this.eliminaButton.addActionListener(e ->{
             int selectedRow = this.tableView.getSelectedRow();
 
@@ -202,7 +199,40 @@ public class MainGUI {
 
     }
 
+    /**
+     * Set Listener for JComboBox tabelleComboBox:
+     * If table is already selected set text of research button to 'Reload'
+     * If selected table in ComboBox is different set button to 'Open'
+     */
+    private void setComboBoxListener() {
+        tabelleComboBox.addActionListener(e -> {
+            Object o = tabelleComboBox.getSelectedItem();
+
+            if(o != null && o.toString().equals(this.currentTable)){
+                cercaTabButton.setText("Reload");
+            } else {
+                cercaTabButton.setText("Open");
+            }
+        });
+    }
+
+
+
     /* ---------- GRAPHIC COMPONENTS ------------ */
+
+    /**
+     * Sets JPanel topPanel.
+     * Used to Updated JComboBox after each change of Table View.
+     */
+    private void setTopPanel(){
+        List<String> tables;
+        try {
+            tables = tableManager.getSchemasNames();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        tables.forEach(n -> tabelleComboBox.addItem(makeObj(n)));
+    }
 
     /**
      * Create Main Menu
@@ -227,7 +257,10 @@ public class MainGUI {
         //Riconnetti
         riconnetti.addActionListener(e ->{
             this.managerDB = new StartDialog(this.loggerManager).startDialog("Riconnetti al BataBase ATI");
-            if(this.managerDB == null) throw new RuntimeException("Unable To Reconnect");
+            if(this.managerDB == null) {
+                JOptionPane.showMessageDialog(this.mainContainer, "Unable To Reconnect",
+                        "Warning", JOptionPane.WARNING_MESSAGE);
+            }
         });
 
         //Esci

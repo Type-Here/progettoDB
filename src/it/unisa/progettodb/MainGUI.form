@@ -41,21 +41,22 @@
           <component id="14eb" class="javax.swing.JButton" binding="cercaTabButton">
             <constraints/>
             <properties>
-              <text value="Open"/>
+              <text value="&amp;Open"/>
+              <toolTipText value=""/>
             </properties>
           </component>
           <component id="34f01" class="javax.swing.JButton" binding="modificaButton" default-binding="true">
             <constraints/>
             <properties>
               <enabled value="false"/>
-              <text value="Modifica"/>
+              <text value="&amp;Modifica"/>
             </properties>
           </component>
           <component id="260b7" class="javax.swing.JButton" binding="eliminaButton" default-binding="true">
             <constraints/>
             <properties>
               <enabled value="false"/>
-              <text value="Elimina"/>
+              <text value="&amp;Elimina"/>
             </properties>
           </component>
         </children>
@@ -78,6 +79,7 @@
           <component id="46853" class="javax.swing.JTextArea" binding="textAreaLog">
             <constraints/>
             <properties>
+              <autoscrolls value="false"/>
               <editable value="false"/>
               <lineWrap value="true"/>
               <wrapStyleWord value="true"/>
