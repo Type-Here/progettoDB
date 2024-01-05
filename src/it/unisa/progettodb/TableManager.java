@@ -1,26 +1,25 @@
 package it.unisa.progettodb;
 
+import it.unisa.progettodb.datacontrol.ContentPackage;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TableManager {
     private String tableName;
     private final List<String> tableColumnList;
+    private final List<JDBCType> typeList;
     private final JTable table;
     private final DBManagement managerDB;
     private DefaultTableModel model;
 
+
+
     public TableManager(JTable table, DBManagement connectDB) {
-        this.tableName = null;
-        this.tableColumnList = new ArrayList<>();
-        this.table = table;
-        this.managerDB = connectDB;
+        this(null, new ArrayList<>(), table, connectDB);
     }
 
     public TableManager(String tableName, List<String> tableColumn, JTable table, DBManagement connectDB) {
@@ -28,6 +27,7 @@ public class TableManager {
         this.tableColumnList = tableColumn;
         this.table = table;
         this.managerDB = connectDB;
+        this.typeList = new ArrayList<>();
     }
 
     /**
@@ -55,6 +55,16 @@ public class TableManager {
         List<String> tables;
         tables = managerDB.getTablesName();
         return tables;
+    }
+
+    public List<ContentPackage> getRowContentPacakgeList(int row){
+        List<ContentPackage> res = new ArrayList<>();
+        for(int i = 0; i < tableColumnList.size(); i++){
+            String data = this.table.getModel().getValueAt(row, i).toString();
+
+            res.add(new ContentPackage(i +1, data, tableColumnList.get(i), this.typeList.get(i)) );
+        }
+        return res;
     }
 
     /* PRIVATE METHODS */
@@ -88,6 +98,7 @@ public class TableManager {
         {
             columnName[i] = metaData.getColumnLabel(i + 1);
             this.tableColumnList.add(columnName[i]);
+            this.typeList.add(JDBCType.valueOf(metaData.getColumnType(i + 1)));
         }
     }
 
@@ -117,6 +128,7 @@ public class TableManager {
      * @return new DefaultTableModel
      */
     private DefaultTableModel newModel() {
+
         DefaultTableModel newModel = new DefaultTableModel(){
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -127,7 +139,9 @@ public class TableManager {
         /*new TableModelListener(){public void tableChanged(TableModelEvent e)}*/
         newModel.addTableModelListener(e -> {
                 /*TODO*/
+
         });
+
         return newModel;
     }
 }
