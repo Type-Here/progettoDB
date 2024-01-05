@@ -61,24 +61,29 @@ public class StartDialog extends JComponent{
         dialogPanel.add(row0);
         dialogPanel.add(row1);
 
-        int option = JOptionPane.showConfirmDialog(null, dialogPanel, title, JOptionPane.OK_CANCEL_OPTION);
-        if(option == JOptionPane.OK_OPTION){
+        DBManagement manager = null;
+        while(attempts < 4 && manager == null) {
+            int option = JOptionPane.showConfirmDialog(null, dialogPanel, title, JOptionPane.OK_CANCEL_OPTION);
+            if (option == JOptionPane.OK_OPTION) {
 
-            try {
-                return new DBManagement(user.getText(), new String(pass.getPassword()), loggerManager);
-            } catch (SQLException e) {
-                if(this.attempts < 3){
-                    this.attempts++;
-                    startDialog("Credentials - Attempt " + attempts + " (Max: 3)");
-                } else {
-                    JOptionPane.showMessageDialog(dialogPanel, "Max Attempts Exceeded", "Warning", JOptionPane.ERROR_MESSAGE);
-                    System.err.println(e.getMessage());
-                    System.exit(1);
+                try {
+                    manager = new DBManagement(user.getText(), new String(pass.getPassword()), loggerManager);
+                } catch (SQLException e) {
+                    if (this.attempts < 3) {
+                        this.attempts++;
+                        pass.setText("");
+                        title = "Credentials - Attempt " + attempts + " (Max: 3)";
+                    } else {
+                        JOptionPane.showMessageDialog(dialogPanel, "Max Attempts Exceeded", "Warning", JOptionPane.ERROR_MESSAGE);
+                        System.err.println(e.getMessage());
+                        System.exit(1);
+                    }
                 }
+
+            } else {
+                System.exit(0);
             }
-        } else {
-            System.exit(0);
         }
-        return null;
+        return manager;
     }
 }

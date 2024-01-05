@@ -4,6 +4,9 @@ import java.sql.JDBCType;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * IMPORTANT: ContentPackage Contains Only Data Of a Single Attribute, NOT the Entire Entity Data!
+ */
 public class ContentPackage {
     private final int index;
     private final String dataString;
