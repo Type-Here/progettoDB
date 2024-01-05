@@ -1,4 +1,5 @@
 package it.unisa.progettodb;
+import it.unisa.progettodb.datacontrol.ContentPackage;
 import it.unisa.progettodb.exceptions.NullTableException;
 import it.unisa.progettodb.logs.LoggerManager;
 
@@ -70,7 +71,7 @@ public class DBManagement {
         }
     }
 
-    /* =================== METADATA FETCH ================= */
+    /* ========================= METADATA FETCH ========================== */
 
     /**
      * Get Names of Schemas in DataBase (Table Names)
@@ -140,6 +141,13 @@ public class DBManagement {
         return metaData;
     }
 
+
+    /**
+     * Retrieve Attributes that compose Primary key for a specific table
+     * @param tableName Table Name of which retrieve PK from
+     * @return HashMap of Primary Keys; K:ColumnName, E:KeySeq (See: {@link java.sql.DatabaseMetaData#getPrimaryKeys(String, String, String)} )
+     * @throws SQLException if metadata getPrimaryKeys fails
+     */
     public HashMap<String, Integer> retrievePrimaryKeys(String tableName) throws SQLException {
         HashMap<String, Integer> resultMap = new HashMap<>();
         //Retrieving meta data
@@ -161,7 +169,12 @@ public class DBManagement {
         return resultMap;
     }
 
-
+    /**
+     * Check if Table Name is a View
+     * @param tableName to check
+     * @return true if table is a view, false if not
+     * @throws SQLException if getMetaData fails
+     */
     public boolean isAView(String tableName) throws SQLException {
         DatabaseMetaData dbm = connectDB.getMetaData();
         try(ResultSet table = dbm.getTables(null, null, tableName, new String[]{"VIEW"}) ){
@@ -169,7 +182,34 @@ public class DBManagement {
         }
     }
 
-    /* ================== MAIN QUERY EXECUTION ===================== */
+
+    /* ========================= METADATA FORMAT FOR USAGE ======================== */
+
+    /**
+     * Retrieve MetaData of Table with tableName and Create a List of ContentPackage with only MetaData. <br />
+     * 1 ContentPackage = 1 Attribute for the Specified Table. <br />
+     * MetaData Contains: Index, ColumnName, Precision, isNullable, JDBCType <br />
+     * Data String is Null.
+     * @param tableName name of the Table to Fetch Data From
+     * @return List of ContentPackage with MetaData
+     * @throws SQLException if fetchMetaData fails
+     */
+    public List<ContentPackage> makeEmptyContentPackage(String tableName) throws SQLException {
+        ResultSetMetaData metaData = fetchMetaData(tableName);
+
+        List<ContentPackage> list = new ArrayList<>();
+        for(int i = 1; i <= metaData.getColumnCount(); i++){
+            ContentPackage c = new ContentPackage(i, null, metaData.getColumnName(i),
+                    JDBCType.valueOf(metaData.getColumnType(i)));
+            c.setPrecision(metaData.getPrecision(i));
+            if(metaData.isNullable(i) == ResultSetMetaData.columnNullable) c.setNullable(true);
+            list.add(c);
+        }
+        return list;
+    }
+
+
+    /* ================================= MAIN QUERY EXECUTION ============================== */
 
     /**
      * Execute a SELECT row0, row1 [, ...] FROM TableName
@@ -227,6 +267,10 @@ public class DBManagement {
         /* Fill PreparedStatement with Data Using Statement method */
         i = 1;
         for(Map.Entry<String, Object> e : dataMap.entrySet()){
+            if(e.getValue() == null) throw new RuntimeException("Valore Null in INSERT DB Management");
+            if(e.getValue() instanceof String s){
+                if(s.isEmpty()) throw new RuntimeException("Stringa Vuota in INSERT DBManagement");
+            }
             pStmt.setObject(i++, e.getValue());
         }
 
@@ -266,6 +310,10 @@ public class DBManagement {
         /* Fill PreparedStatement with Data Using Statement method */
         i = 1;
         for(Map.Entry<String, Object> e : dataMap.entrySet()){
+            if(e.getValue() == null) throw new RuntimeException("Valore Null in DELETE DB Management");
+            if(e.getValue() instanceof String s){
+                if(s.isEmpty()) throw new RuntimeException("Stringa Vuota in DELETE DBManagement");
+            }
             pStmt.setObject(i++, e.getValue());
         }
 

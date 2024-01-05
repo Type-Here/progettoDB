@@ -12,12 +12,16 @@ public class ContentPackage {
     private final String dataString;
     private final String columnName;
     private final JDBCType type;
+    private boolean isNullable;
+    private int precision;
 
     public ContentPackage(int index, String dataString, String columnName, JDBCType type) {
         this.index = index;
         this.dataString = dataString;
         this.columnName = columnName;
         this.type = type;
+        this.isNullable = false;
+        this.precision = -1; //NO PRECISION SET
     }
 
     /* GETTERS */
@@ -37,6 +41,26 @@ public class ContentPackage {
     public JDBCType getType() {
         return type;
     }
+
+    public boolean isNullable() {
+        return isNullable;
+    }
+
+    public int getPrecision() {
+        return precision;
+    }
+
+    /* SETTERS*/
+
+    public void setNullable(boolean nullable) {
+        this.isNullable = nullable;
+    }
+
+    public void setPrecision(int precision) {
+        this.precision = precision;
+    }
+
+
 
     /**
      * FORMAT FOR QUERY

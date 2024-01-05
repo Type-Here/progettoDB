@@ -4,12 +4,14 @@ import com.github.lgooddatepicker.components.DatePickerSettings;
 import it.unisa.progettodb.DBManagement;
 import it.unisa.progettodb.datacontrol.ContentChecker;
 import it.unisa.progettodb.datacontrol.ContentPackage;
+import it.unisa.progettodb.datacontrol.CustomDocFilter;
 import it.unisa.progettodb.exceptions.InvalidTableSelectException;
 import it.unisa.progettodb.exceptions.NullTableException;
 import it.unisa.progettodb.exceptions.ValidatorException;
 
 import javax.swing.*;
 import javax.swing.text.MaskFormatter;
+import javax.swing.text.PlainDocument;
 import java.awt.*;
 import java.sql.JDBCType;
 import java.sql.ResultSetMetaData;
@@ -34,34 +36,38 @@ public class Insert extends JOptionPane implements DataManipulation{
     }
 
     /**
-     * MAIN CONTROL METHOD:
+     * MAIN CONTROL METHOD: <br />
      * Create Dialog for Insertion in Table.
-     * Check if table is not null or is Not Possible to Insert (ex a view).
-     * Fetch Data with managerDB.fetchMetaData and .fetchDataType
-     * Then Call launchCheckThenDialog to confirm data.
-     * Then if all ok call sendDataToInsert() to execute query by managerDB.
+     * Check if table is not null or is Not Possible to Insert (i.e. a view). <br />
+     * - Get List of Content Package With makeEmptyContentPackage for managerDB. <br />
+     * - Then Call launchCheckThenDialog to confirm data. <br />
+     * - Then if all ok call sendDataToInsert() to execute query by managerDB. <br />
+     * @return true if data in table are modified, false if not.
+     * This is not an error check because will return false even if user cancel operation!
      */
     @Override
     public boolean createDialog(){
-        List<JDBCType> dataType;
-        ResultSetMetaData metaData;
-
         try {
             if(this.workingTable == null) throw new NullTableException();
             if(!isInsertionAble(this.workingTable)) throw new InvalidTableSelectException();
 
-            /*Fetch MetaData*/
-            metaData = managerDB.fetchMetaData(this.workingTable);
-            dataType = managerDB.fetchDataType(this.workingTable);
+            /*Fetch Data with new Method. Return a List of Content Package with all metadata and Data String NULL*/
+            List<ContentPackage> listCP = managerDB.makeEmptyContentPackage(this.workingTable);
 
-            /*Open Main Dialog for USer Input*/
-            HashMap<Integer, JDBCType> insertDataIndexType = setPanel(metaData, dataType);
+            /*Remove Any Column the User Should Not Insert. This is DataBase Specific*/
+            DataManipulation.removeNonUserModifyAbleData(listCP,this.workingTable);
+
+            System.out.println("CC: " + listCP);
+
+            /* Open MAIN DIALOG for User Input */
+            setPanel(listCP);
+
             int result = JOptionPane.showConfirmDialog(this.owner, mainDialogPanel, "Insert Data in Table", this.optionType, this.messageType);
 
             if(result == JOptionPane.OK_OPTION) { //Else User Pressed Cancel so Return
 
                 /*Validate Data then Open Confirmation Dialog*/
-                contentPackageList = formatAndValidateData(metaData, insertDataIndexType);
+                contentPackageList = populateAndValidateData(listCP);
 
                 //If Data is Valid Show Message Confirm Box. So SUer Can Confirm
                 if(finalCheckDialog(ContentPackage.returnDataMapAsString(contentPackageList)) == JOptionPane.OK_OPTION){
@@ -82,104 +88,86 @@ public class Insert extends JOptionPane implements DataManipulation{
             JOptionPane.showMessageDialog(this.mainDialogPanel, "Data Not Valid: \n" + e.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
+
         return false;
     }
 
 
+
     /**
-     * Set Up the MainDialogPanel with each row a filed to insert data
-     * @param metaData Contains metadata of Table to set Precision, Column Name ecc.
-     * @param dataType List of JBDC Type, 1 for each column containing type (int, double...) of each column
-     * @throws SQLException if getMetaData fails
+     * NEW SET PANEL <br />
+     * Set Up the MainDialogPanel with each row a filed to insert data. br />
+     * Use DocumentFilter and inputValidator to Check On Input User.
+     * @param contentPackageList containing only MetaData (index, columnName, precision, isNullable, JDBCType)
      */
-    private  HashMap<Integer, JDBCType> setPanel(ResultSetMetaData metaData, List<JDBCType> dataType) throws SQLException {
+    private void setPanel(List<ContentPackage> contentPackageList) {
 
-        //Save Index of MetaData Column that will be visible in Dialog Pane.
-        HashMap<Integer, JDBCType> insertDataIndexType = new HashMap<>();
+        mainDialogPanel = new JPanel(new GridLayout(contentPackageList.size(), 2));
 
-        mainDialogPanel = new JPanel(new GridLayout(dataType.size(), 2));
-        int i = 1;
-
-        for(JDBCType t: dataType){
+        for(ContentPackage content: contentPackageList){
+            JDBCType typeSQL = content.getType();
             JPanel rowPanel = new JPanel();
-            JLabel label = new JLabel("Insert " + metaData.getColumnName(i) + ' '
-                                + t.getName().toLowerCase() + ':'
-                                + (metaData.isNullable(i) == ResultSetMetaData.columnNullable ? ' ' : '*') );
+            JLabel label = new JLabel("Insert " + content.getColumnName() + ' '
+                    + typeSQL + ':'
+                    + (content.isNullable() ? ' ' : '*') );
             rowPanel.add(label);
 
             JFormattedTextField textField;
             DatePicker datePicker;
 
-            //CHAR in MySQL has a Fixed size, so Precision is used to set TextSize viw MaskFormatter
-            if(t.equals(JDBCType.CHAR)) {
-                StringBuilder format = new StringBuilder();
-                format.append("*".repeat(Math.max(0, metaData.getPrecision(i))));
 
-                MaskFormatter formatter; //with however many characters you need
-                try {
-                    formatter = new MaskFormatter(format.toString());
-                } catch (ParseException e) {
-                    throw new RuntimeException(e);
-                }
-                formatter.setValidCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-"); // whatever characters you would use
-
-                textField = new JFormattedTextField(formatter);
-                textField.setPreferredSize(new Dimension(200, 20));
-                rowPanel.add(textField);
-
-                //If Data is a Date
-            } else if(t.equals(JDBCType.DATE)) {
+            //If Data is a Date
+            if(content.getType().equals(JDBCType.DATE)) {
                 DatePickerSettings datePickerSettings = new DatePickerSettings(Locale.ITALY);
                 datePickerSettings.setFirstDayOfWeek(DayOfWeek.MONDAY);
                 datePicker = new DatePicker(datePickerSettings);
 
                 rowPanel.add(datePicker);
 
-            } else if (isNumber(t)) {
-
-                textField = new JFormattedTextField();
-                textField.setPreferredSize(new Dimension(200, 20));
-
-                rowPanel.add(textField);
-
                 /* THIS IS IMPLEMENTATION SPECIFIC - NO BOOLEAN IN OUR DB HAS TO BE SET BY USER */
-            } else if(t.equals(JDBCType.BIT) || t.equals(JDBCType.BOOLEAN)) {
+            } else if(content.getType().equals(JDBCType.BIT) || content.getType().equals(JDBCType.BOOLEAN)) {
                 continue;
 
-            } else { //Es VARCHAR
-
+            } else {
                 textField = new JFormattedTextField();
+
+                //CHAR in MySQL has a Fixed size, so Precision is used to set TextSize
+                if(typeSQL.equals(JDBCType.CHAR)){
+                    textField.setInputVerifier(CustomDocFilter.getInputVerifierFixedSize(content.getPrecision()));
+                } else {
+                    textField.setInputVerifier(CustomDocFilter.getInputVerifierFixedSize(CustomDocFilter.NOFIXEDSIZE));
+                }
+
+                PlainDocument doc = (PlainDocument) textField.getDocument();
+                doc.setDocumentFilter(new CustomDocFilter(content.getType(), content.getPrecision()));
+
                 textField.setPreferredSize(new Dimension(200, 20));
 
                 rowPanel.add(textField);
-            }
 
-            insertDataIndexType.put(i, t);
+            }
 
             mainDialogPanel.add(rowPanel);
             mainDialogPanel.setFocusTraversalKeysEnabled(true);
-            ++i;
         }
-
-        return insertDataIndexType;
     }
 
     /**
-     * After MainPanelDialog.
+     * NEW Populate and Validate Data Method <br />
+     * After MainPanelDialog. <br />
      * Before is performed a validation for some of more sensible data (IDs like Targa, Matricola ecc)
-     *
-     * @param metaData            metaData of the table
-     * @param insertDataIndexType HashMap list of indexes of the column used in main dialog (not all columns needs insertion) - JDBCType OF Column
-     * @return List of ContentPackage each containing Index, JDBCType, User Inserted Data (String), Column Name.
+     * @param emptyData List of Content Package containing only MetaData for Each Column
+     * @return List&lt;ContentPackage&gt; With All Data and MetaData needed For Insertion
+     * @throws ValidatorException if Validation Fails: Empty Strings, NON-Valid Formatting (i.e. Matricola must have AA0000 format) ecc..
      */
-    private List<ContentPackage> formatAndValidateData(ResultSetMetaData metaData, HashMap<Integer, JDBCType> insertDataIndexType) throws SQLException, ValidatorException {
-        Component[] c = mainDialogPanel.getComponents();
+    private List<ContentPackage> populateAndValidateData(List<ContentPackage> emptyData) throws ValidatorException {
+        Component[] components = mainDialogPanel.getComponents();
 
         List<String> newData = new ArrayList<>();
         List<ContentPackage> contentPackageList = new ArrayList<>();
 
         /* Get Data Inserted in Previous Dialog and Add it in a List*/
-        for(Component component : c){
+        for(Component component : components){
             if (component instanceof JPanel internal){
                 Component[] internalComp = internal.getComponents();
 
@@ -196,37 +184,41 @@ public class Insert extends JOptionPane implements DataManipulation{
             }
         }
 
-        if(newData.isEmpty()) throw new RuntimeException("Error Data is Empty");
+        if(newData.isEmpty()) throw new ValidatorException("Error Data is Empty");
 
-        /*FORMAT DATA in Content Package*/
+        /* WHY CREATE A NEW CONTENTPACKAGE? TO NOT EXPOSE setDataString: DATA is Final. */
 
-        /* Format
-         * - From HashMap - Key: Index of column -  Value: JDBC Type
-         * - From medaData for ColumnName
-         * - From newData list containing data inserted by user in string format
-         * Saved in ContentPackage Object
-         * Stored in List contentePackageList */
-        for(Map.Entry<Integer,JDBCType> e : insertDataIndexType.entrySet()){
-            int index = e.getKey();
-            ContentPackage content = new ContentPackage(index, newData.get(index - 1),
-                                            metaData.getColumnName(index), e.getValue() );
-            contentPackageList.add(content);
+        /* Populate contentPackageList With Data Inserted by User */
+        int i = 0;
+        for(ContentPackage c : emptyData){
+            String data = newData.get(i++);
+
+            /* FUNDAMENTAL CHECK ON EMPTY STRINGS */
+            if(!c.isNullable()){
+                if(data == null || data.isEmpty()) throw new ValidatorException("Attributo " + c.getColumnName() + " non può essere vuoto!");
+            }
+            contentPackageList.add(
+                    new ContentPackage(c.getIndex(), data, c.getColumnName(), c.getType())
+            );
         }
 
         System.out.println(contentPackageList);
 
         /*DATA CHECK*/
 
-        /*Automatic Validation of Data*/
+        /*Automatic Validation of Data, Throw ValidatorException if Fails Control */
         if(ContentChecker.checker(ContentPackage.returnDataMapAsString(contentPackageList), this.workingTable))
             return contentPackageList;
+
+        //Should Not Get Here
         throw new RuntimeException("Something Went Wrong");
     }
 
+
     /**
-     * New Dialog to verify data inserted before actually sending it.
-     * Set Second Panel before Finalizing Insert Query
-     * Let User Control if Data is Correct
+     * New Dialog to verify data inserted before actually sending it. <br />
+     * - Set Second Panel before Finalizing Insert Query. <br />
+     * - Let User Control if Data is Correct.
      * @param data hashmap in string, string format to print (K:column name, E:data)
      * @return JOptionPane.OK_OPTION value if user confirm, CANCEL otherwise
      */
@@ -287,5 +279,157 @@ public class Insert extends JOptionPane implements DataManipulation{
 
         //return ( tableName.equalsIgnoreCase("dipendentiView") || tableName.toLowerCase().contains("view") );
     }
+
+
+
+
+    /* ======================================== !DEPRECATED METHODS! ==================================================== */
+
+
+
+    /**
+     * Deprecated <br />
+     * After MainPanelDialog.
+     * Before is performed a validation for some of more sensible data (IDs like Targa, Matricola ecc)
+     *
+     * @param metaData            metaData of the table
+     * @param insertDataIndexType HashMap list of indexes of the column used in main dialog (not all columns needs insertion) - JDBCType OF Column
+     * @return List of ContentPackage each containing Index, JDBCType, User Inserted Data (String), Column Name.
+     */
+    @Deprecated
+    private List<ContentPackage> formatAndValidateDataOld(ResultSetMetaData metaData, HashMap<Integer, JDBCType> insertDataIndexType) throws SQLException, ValidatorException {
+        Component[] c = mainDialogPanel.getComponents();
+
+        List<String> newData = new ArrayList<>();
+        List<ContentPackage> contentPackageList = new ArrayList<>();
+
+        /* Get Data Inserted in Previous Dialog and Add it in a List*/
+        for(Component component : c){
+            if (component instanceof JPanel internal){
+                Component[] internalComp = internal.getComponents();
+
+                for(Component comp : internalComp){
+
+                    if(comp instanceof JFormattedTextField f){
+                        newData.add(f.getText());
+                    } else if(comp instanceof DatePicker d){
+                        newData.add(d.getDate().toString());
+                    }
+                }
+            } else {
+                throw new RuntimeException("Something getting info gone wrong");
+            }
+        }
+
+        if(newData.isEmpty()) throw new RuntimeException("Error Data is Empty");
+
+        /*FORMAT DATA in Content Package*/
+
+        /* Format
+         * - From HashMap - Key: Index of column -  Value: JDBC Type
+         * - From medaData for ColumnName
+         * - From newData list containing data inserted by user in string format
+         * Saved in ContentPackage Object
+         * Stored in List contentePackageList */
+        for(Map.Entry<Integer,JDBCType> e : insertDataIndexType.entrySet()){
+            int index = e.getKey();
+            ContentPackage content = new ContentPackage(index, newData.get(index - 1),
+                    metaData.getColumnName(index), e.getValue() );
+            contentPackageList.add(content);
+        }
+
+        System.out.println(contentPackageList);
+
+        /*DATA CHECK*/
+
+        /*Automatic Validation of Data*/
+        if(ContentChecker.checker(ContentPackage.returnDataMapAsString(contentPackageList), this.workingTable))
+            return contentPackageList;
+        throw new RuntimeException("Something Went Wrong");
+    }
+
+    /**
+     * Deprecated <br />
+     * Set Up the MainDialogPanel with each row a filed to insert data
+     * @param metaData Contains metadata of Table to set Precision, Column Name ecc.
+     * @param dataType List of JBDC Type, 1 for each column containing type (int, double...) of each column
+     * @throws SQLException if getMetaData fails
+     */
+    @Deprecated
+    private  HashMap<Integer, JDBCType> setPanelOld(ResultSetMetaData metaData, List<JDBCType> dataType) throws SQLException {
+
+        //Save Index of MetaData Column that will be visible in Dialog Pane.
+        HashMap<Integer, JDBCType> insertDataIndexType = new HashMap<>();
+
+        mainDialogPanel = new JPanel(new GridLayout(dataType.size(), 2));
+        int i = 1;
+
+        for(JDBCType t: dataType){
+            JPanel rowPanel = new JPanel();
+            JLabel label = new JLabel("Insert " + metaData.getColumnName(i) + ' '
+                    + t.getName().toLowerCase() + ':'
+                    + (metaData.isNullable(i) == ResultSetMetaData.columnNullable ? ' ' : '*') );
+            rowPanel.add(label);
+
+            JFormattedTextField textField;
+            DatePicker datePicker;
+
+            //CHAR in MySQL has a Fixed size, so Precision is used to set TextSize via MaskFormatter
+            if(t.equals(JDBCType.CHAR)) {
+                StringBuilder format = new StringBuilder();
+                format.append("*".repeat(Math.max(0, metaData.getPrecision(i))));
+
+                MaskFormatter formatter; //with however many characters you need
+                try {
+                    formatter = new MaskFormatter(format.toString());
+                } catch (ParseException e) {
+                    throw new RuntimeException(e);
+                }
+                formatter.setValidCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-"); // whatever characters you would use
+
+                textField = new JFormattedTextField(formatter);
+                textField.setPreferredSize(new Dimension(200, 20));
+                rowPanel.add(textField);
+
+                //If Data is a Date
+            } else if(t.equals(JDBCType.DATE)) {
+                DatePickerSettings datePickerSettings = new DatePickerSettings(Locale.ITALY);
+                datePickerSettings.setFirstDayOfWeek(DayOfWeek.MONDAY);
+                datePicker = new DatePicker(datePickerSettings);
+
+                rowPanel.add(datePicker);
+
+            } else if (isNumber(t)) {
+                textField = new JFormattedTextField();
+
+                PlainDocument doc = (PlainDocument) textField.getDocument();
+                doc.setDocumentFilter(new CustomDocFilter(t, metaData.getPrecision(i)));
+
+                textField.setPreferredSize(new Dimension(200, 20));
+
+                rowPanel.add(textField);
+
+                /* THIS IS IMPLEMENTATION SPECIFIC - NO BOOLEAN IN OUR DB HAS TO BE SET BY USER */
+            } else if(t.equals(JDBCType.BIT) || t.equals(JDBCType.BOOLEAN)) {
+                continue;
+
+            } else { //Es VARCHAR
+
+                textField = new JFormattedTextField();
+                textField.setPreferredSize(new Dimension(200, 20));
+
+                rowPanel.add(textField);
+            }
+
+            insertDataIndexType.put(i, t);
+
+            mainDialogPanel.add(rowPanel);
+            mainDialogPanel.setFocusTraversalKeysEnabled(true);
+            ++i;
+        }
+
+        return insertDataIndexType;
+    }
+
 
 }
