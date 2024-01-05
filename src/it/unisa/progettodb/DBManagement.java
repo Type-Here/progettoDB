@@ -15,7 +15,7 @@ public class DBManagement {
     private ResultSet rSet;
     private LoggerManager loggerManager;
 
-    public enum ActionEnum {Select, Insert, Update, GetSchemas, Connected, FetchDataType, FetchMetaData}
+    public enum ActionEnum {Select, Insert, Delete, Update, GetSchemas, Connected, FetchDataType, FetchMetaData}
 
     /* ===== CONSTRUCTORS ===== */
 
@@ -140,6 +140,27 @@ public class DBManagement {
         return metaData;
     }
 
+    public HashMap<String, Integer> retrievePrimaryKeys(String tableName) throws SQLException {
+        HashMap<String, Integer> resultMap = new HashMap<>();
+        //Retrieving meta data
+        DatabaseMetaData metaData = connectDB.getMetaData();
+
+        //Retrieving the columns in the table
+        ResultSet rs = metaData.getPrimaryKeys("ATI", null, tableName);
+        //Printing the column name and size
+        while (rs.next()){
+            /*System.out.println("Table name: "+rs.getString("TABLE_NAME"));
+            System.out.println("Column name: "+rs.getString("COLUMN_NAME"));
+            System.out.println("Catalog name: "+rs.getString("TABLE_CAT"));
+            System.out.println("Primary key sequence: "+rs.getString("KEY_SEQ"));
+            System.out.println("Primary key name: "+rs.getString("PK_NAME"));
+            System.out.println(" ");*/
+            resultMap.put(rs.getString("COLUMN_NAME"), rs.getInt("KEY_SEQ"));
+        }
+
+        return resultMap;
+    }
+
 
     public boolean isAView(String tableName) throws SQLException {
         DatabaseMetaData dbm = connectDB.getMetaData();
@@ -203,13 +224,48 @@ public class DBManagement {
 
         PreparedStatement pStmt = connectDB.prepareStatement(buildIns.toString());
 
+        /* Fill PreparedStatement with Data Using Statement method */
         i = 1;
         for(Map.Entry<String, Object> e : dataMap.entrySet()){
             pStmt.setObject(i++, e.getValue());
         }
 
+        /*Execute Insert Query*/
         /*pStmt.executeUpdate();*/
+
+        //Logs
         sendToLog(pStmt.toString(), ActionEnum.Insert);
+    }
+
+    public void executeDelete(HashMap<String, Object> dataMap, String tableName) throws SQLException {
+        StringBuilder buildIns = new StringBuilder();
+        buildIns.append("DELETE FROM ").append(tableName).append(" WHERE");
+
+        // Statement could be also created here but prone to SQL Injection.
+        // So This Add Controlled Data (Column Names and Number of Values)
+        int i = 0;
+        for(Map.Entry<String, Object> e : dataMap.entrySet()){
+            if(i++ == 0) {
+                buildIns.append(e.getKey()).append("= ?");
+            } else {
+                buildIns.append(" AND ").append(e.getKey());
+            }
+        }
+        buildIns.append(" ;");
+
+        PreparedStatement pStmt = connectDB.prepareStatement(buildIns.toString());
+
+        /* Fill PreparedStatement with Data Using Statement method */
+        i = 1;
+        for(Map.Entry<String, Object> e : dataMap.entrySet()){
+            pStmt.setObject(i++, e.getValue());
+        }
+
+        /*Execute Delete Query*/
+        /*pStmt.executeUpdate();*/
+
+        //Logs
+        sendToLog(pStmt.toString(), ActionEnum.Delete);
     }
 
 
