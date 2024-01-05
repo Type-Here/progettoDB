@@ -5,9 +5,8 @@ import it.unisa.progettodb.datacontrol.ContentPackage;
 import javax.swing.*;
 import java.awt.*;
 import java.sql.SQLException;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 public class Delete implements DataManipulation {
     private final DBManagement managerDB;
@@ -20,7 +19,6 @@ public class Delete implements DataManipulation {
         this.workingTable = workingTable;
         this.owner = owner;
         this.contentPackageList = contentPackageList;
-        createDialog();
     }
 
     /**
@@ -30,15 +28,34 @@ public class Delete implements DataManipulation {
      * - Send Delete Query to managerDB.
      */
     @Override
-    public void createDialog()  {
+    public boolean createDialog()  {
         if(checkDialog(ContentPackage.returnDataMapAsString(this.contentPackageList)) == JOptionPane.OK_OPTION){
             try {
                 HashMap<String,Integer> primaryKeys = managerDB.retrievePrimaryKeys(this.workingTable);
+                List<ContentPackage> filteredKeys = new ArrayList<>();
                 primaryKeys.entrySet().forEach(System.out::println);
+
+                for(Map.Entry<String, Integer> e: primaryKeys.entrySet()){
+                    ContentPackage c = this.contentPackageList.stream()
+                            .filter(content -> e.getKey().equalsIgnoreCase(content.getColumnName()))
+                            .findFirst().orElseThrow();
+                    filteredKeys.add(c);
+                }
+
+                managerDB.executeDelete(ContentPackage.returnDataForQuery(filteredKeys), this.workingTable);
+                return true;
             } catch (SQLException e) {
+                JOptionPane.showMessageDialog(this.owner, "Errore SQL in Eliminazione Dato: \n" + e.getMessage(),
+                        "Error Delete", JOptionPane.ERROR_MESSAGE);
                 throw new RuntimeException(e);
+
+            } catch (NoSuchElementException e){ //Thrown by Stream filter
+                JOptionPane.showMessageDialog(this.owner, "Errore Selezione Dati: \nImpossibile Individuare Chiavi Primarie da Elemento",
+                        "Error Selection", JOptionPane.ERROR_MESSAGE);
+                throw new RuntimeException("Missing Data From Selected Row. \nImpossible to Select Element by primary key");
             }
         }
+        return false;
     }
 
     /**
@@ -75,6 +92,9 @@ public class Delete implements DataManipulation {
      * @return true if data is deletable, false if not
      */
     public static boolean isDeletable(String tableName){
+        if(tableName.equalsIgnoreCase("dipendente") ||
+                tableName.equalsIgnoreCase("categoria")) return true; //For Testing Purposes!!!!
+
         return tableName.equalsIgnoreCase("consegna") || tableName.equalsIgnoreCase("dipendentiview");
     }
 }

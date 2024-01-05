@@ -231,24 +231,32 @@ public class DBManagement {
         }
 
         /*Execute Insert Query*/
-        /*pStmt.executeUpdate();*/
+        pStmt.executeUpdate();
 
         //Logs
         sendToLog(pStmt.toString(), ActionEnum.Insert);
     }
 
+    /**
+     * Execute DELETE from Table.
+     * Use a Prepared Statement For Sending Data.
+     * DataMap Contains Primary Keys Only!
+     * @param dataMap HashMap: K: String with Column Name, E: Data in Object Format see {@link it.unisa.progettodb.datacontrol.ContentPackage#returnDataForQuery(List)}
+     * @param tableName Table Name Where Deletion will be performed (String)
+     * @throws SQLException if Insert Fails
+     */
     public void executeDelete(HashMap<String, Object> dataMap, String tableName) throws SQLException {
         StringBuilder buildIns = new StringBuilder();
-        buildIns.append("DELETE FROM ").append(tableName).append(" WHERE");
+        buildIns.append("DELETE FROM ").append(tableName).append(" WHERE ");
 
         // Statement could be also created here but prone to SQL Injection.
         // So This Add Controlled Data (Column Names and Number of Values)
         int i = 0;
         for(Map.Entry<String, Object> e : dataMap.entrySet()){
             if(i++ == 0) {
-                buildIns.append(e.getKey()).append("= ?");
+                buildIns.append(e.getKey()).append("=?");
             } else {
-                buildIns.append(" AND ").append(e.getKey());
+                buildIns.append(" AND ").append(e.getKey()).append("=?");
             }
         }
         buildIns.append(" ;");
@@ -262,8 +270,7 @@ public class DBManagement {
         }
 
         /*Execute Delete Query*/
-        /*pStmt.executeUpdate();*/
-
+        pStmt.executeUpdate();
         //Logs
         sendToLog(pStmt.toString(), ActionEnum.Delete);
     }

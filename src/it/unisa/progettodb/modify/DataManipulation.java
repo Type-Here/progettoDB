@@ -11,5 +11,9 @@ public interface  DataManipulation {
             return Other.name();
         }
     }
-    void createDialog();
+    /**
+     * NB: Return true if Table Needs Reload, False if Not.
+     * A False Return Value doesn't always indicate an error (I.E. Operation Cancelled by User)
+     */
+    boolean createDialog();
 }
