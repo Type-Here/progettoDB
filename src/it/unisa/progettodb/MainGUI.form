@@ -44,6 +44,20 @@
               <text value="Open"/>
             </properties>
           </component>
+          <component id="34f01" class="javax.swing.JButton" binding="modificaButton" default-binding="true">
+            <constraints/>
+            <properties>
+              <enabled value="false"/>
+              <text value="Modifica"/>
+            </properties>
+          </component>
+          <component id="260b7" class="javax.swing.JButton" binding="eliminaButton" default-binding="true">
+            <constraints/>
+            <properties>
+              <enabled value="false"/>
+              <text value="Elimina"/>
+            </properties>
+          </component>
         </children>
       </grid>
       <scrollpane id="11f3">

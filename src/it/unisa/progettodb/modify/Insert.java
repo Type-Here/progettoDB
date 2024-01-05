@@ -282,7 +282,7 @@ public class Insert extends JOptionPane implements DataManipulation{
      * @return true if insertable, false if not
      * @throws SQLException if check table is a view fails
      */
-    private boolean isInsertionAble(String tableName) throws SQLException {
+    public boolean isInsertionAble(String tableName) throws SQLException {
         return (! managerDB.isAView(tableName) );
 
         //return ( tableName.equalsIgnoreCase("dipendentiView") || tableName.toLowerCase().contains("view") );

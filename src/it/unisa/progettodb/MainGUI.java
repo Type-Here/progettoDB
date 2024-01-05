@@ -1,12 +1,14 @@
 package it.unisa.progettodb;
 
 import it.unisa.progettodb.logs.LoggerManager;
+import it.unisa.progettodb.modify.Delete;
 import it.unisa.progettodb.modify.Insert;
 
 import javax.swing.*;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 import java.awt.*;
+
 import java.sql.SQLException;
 import java.util.List;
 
@@ -18,6 +20,8 @@ public class MainGUI {
     private JComboBox<Object> tabelleComboBox;
     private JButton cercaTabButton;
     private JTextArea textAreaLog;
+    private JButton modificaButton;
+    private JButton eliminaButton;
     /* Custom Objects */
     private final JMenuBar menuBar;
     private DBManagement managerDB;
@@ -48,10 +52,16 @@ public class MainGUI {
         /*Sets tabelleComboBox with Table Names to be Selected for View*/
         setTopPanel();
 
-        /*Button Listener*/
+        /*Set Appropriate Listeners to JTable*/
+        this.setTableListeners();
+
+        /*Open Button Listener*/
         cercaTabButtonAction();
 
+        /*Modify Data Listeners*/
+        modifyAndDeleteButtonAction();
     }
+
 
     /* ------ PUBLIC METHODS ------ */
 
@@ -92,7 +102,50 @@ public class MainGUI {
         managerDB.closeConnection();
     }
 
-    /* ------ PRIVATE METHODS ------ */
+    /* ----------------------- PRIVATE METHODS ------------------------- */
+
+    /* -------- LISTENERS --------- */
+
+    /**
+     * Set Table Listeners.
+     * Focus Listener with KeyboardFocusManager to Remove Selection and Disable buttons when focus is lost.
+     * Table Property Change to Disable Buttons on Table Reload.
+     * Table Selection Listener to Enable / Disable Buttons Appropriately.
+     */
+    private void setTableListeners(){
+        /*KeyboardFocusManager is one of main class to manage focus in Java*/
+        /*When table nor modify or delete button are on focus deselect row */
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addPropertyChangeListener("focusOwner", evt -> {
+            /* Property Change Event */
+            Object c = evt.getNewValue();
+            if(c == null) return;
+            if(!(c.equals(tableView) || c.equals(modificaButton) || c.equals(eliminaButton)) ){
+                tableView.clearSelection();
+                tableView.getSelectionModel().clearSelection();
+            }
+
+        });
+
+        /* Disable Button When Table is Reloaded or Changed */
+        this.tableView.addPropertyChangeListener(e->{
+            this.modificaButton.setEnabled(false);
+            this.eliminaButton.setEnabled(false);
+        });
+
+        this.tableView.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); //Enable User to Select Only 1 Row
+
+        /*THIS CALL A DATABASE SPECIFIC CONTROL ON WICH TABLE USER CAN DELETE*/
+        /*When Selected Row in Table Enable Modify Button and Delete Button (only on appropriate tables) */
+        this.tableView.getSelectionModel().addListSelectionListener( ev -> {
+            if(this.tableView.getSelectedRow() >= 0){
+                this.modificaButton.setEnabled(true);
+                if(Delete.isDeletable(this.currentTable)) this.eliminaButton.setEnabled(true);
+            } else {
+                this.modificaButton.setEnabled(false);
+                this.eliminaButton.setEnabled(false);
+            }
+        });
+    }
 
     /**
      * Used in JComboBox to Avoid Error if Repeated String
@@ -121,6 +174,28 @@ public class MainGUI {
             }
         });
     }
+
+    private void modifyAndDeleteButtonAction() {
+        this.modificaButton.addActionListener(e ->{
+
+        });
+
+        this.eliminaButton.addActionListener(e ->{
+            int selectedRow = this.tableView.getSelectedRow();
+            System.out.println("Riga selezionata: " + selectedRow);
+            if( selectedRow >= 0){
+
+                Delete deletePane = new Delete(this.getMainContainer(), this.managerDB,
+                        this.currentTable, tableManager.getRowContentPacakgeList(selectedRow));
+            } else {
+                JOptionPane.showMessageDialog(this.getMainContainer(), "No Row Selected in Table.",
+                        "No Row Selected", JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
+
+    }
+
+    /* ---------- GRAPHIC COMPONENTS ------------ */
 
     /**
      * Create Main Menu
@@ -166,7 +241,12 @@ public class MainGUI {
 
         //Inserisci (Modifica)
         inserisciModifica.addActionListener(e ->{
-            Insert insertPane = new Insert(this.getMainContainer(), this.managerDB, currentTable);
+            Insert insertPane = new Insert(this.getMainContainer(), this.managerDB, this.currentTable);
+        });
+
+        //Elimina (Modifica)
+        deleteModifica.addActionListener(e ->{
+
         });
         /*TODO*/
 
