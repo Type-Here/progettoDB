@@ -20,7 +20,7 @@ public class DataMapFormatter {
     }
 
     public static Object objectFromData(JDBCType type, String data){
-        if(type == JDBCType.BOOLEAN || type == JDBCType.TINYINT){
+        if(type == JDBCType.BOOLEAN || type == JDBCType.BIT){
             return Boolean.parseBoolean(data);
 
         } else if(type.equals(JDBCType.DOUBLE) || type.equals(JDBCType.FLOAT) || type.equals(JDBCType.DECIMAL)){
