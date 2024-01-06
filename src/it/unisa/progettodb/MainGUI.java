@@ -5,6 +5,7 @@ import it.unisa.progettodb.logs.LoggerManager;
 import it.unisa.progettodb.modify.Delete;
 import it.unisa.progettodb.modify.Insert;
 import it.unisa.progettodb.modify.Update;
+import it.unisa.progettodb.operations.ReleaseWorker;
 import it.unisa.progettodb.sql.DBManagement;
 
 import javax.swing.*;
@@ -43,7 +44,7 @@ public class MainGUI {
 
 
         if(managerDB.isConnected()){
-            JOptionPane.showMessageDialog(this.getMainContainer(), "Connected");
+           // JOptionPane.showMessageDialog(this.getMainContainer(), "Connected");
         } else throw new RuntimeException("Unable to Connect");
 
         menuBar = addMainMenu();
@@ -326,7 +327,16 @@ public class MainGUI {
 
 
         /* Operazioni Menu */
+        JMenuItem rimuoviDipendente = new JMenuItem("Liberate i Cani");
+        menuOperazioni.add(rimuoviDipendente);
 
+
+        rimuoviDipendente.addActionListener(e ->{
+            ReleaseWorker releaseWorker = new ReleaseWorker(this.getMainContainer(), this.managerDB);
+            if(releaseWorker.createDialog()){
+
+            }
+        });
         /*TODO*/
 
         /* About Menu */
