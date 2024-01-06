@@ -13,7 +13,7 @@ import java.util.List;
 
 public interface  DataManipulation {
     enum TablesEnum{
-        DipendentiView, Trasportatore, Dirigente
+        Consegna, DipendentiView, Trasportatore, Dirigente
     }
 
 

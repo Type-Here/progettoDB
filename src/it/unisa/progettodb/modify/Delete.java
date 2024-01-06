@@ -99,9 +99,10 @@ public class Delete implements DataManipulation {
      * @return true if data is deletable, false if not
      */
     public static boolean isDeletable(String tableName){
-        if(tableName.equalsIgnoreCase("dipendente") ||
+        if(tableName.equalsIgnoreCase("dipendente") || //For Testing Purposes!!!
                 tableName.equalsIgnoreCase("categoria")) return true; //For Testing Purposes!!!!
 
-        return tableName.equalsIgnoreCase("consegna") || tableName.equalsIgnoreCase("dipendentiview");
+        return tableName.equalsIgnoreCase(TablesEnum.Consegna.name()) ||
+                            tableName.equalsIgnoreCase(TablesEnum.DipendentiView.name());
     }
 }
