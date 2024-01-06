@@ -1,5 +1,6 @@
 package it.unisa.progettodb.sql;
 import it.unisa.progettodb.datacontrol.ContentPackage;
+import it.unisa.progettodb.datacontrol.ContentWrap;
 import it.unisa.progettodb.exceptions.NullTableException;
 import it.unisa.progettodb.logs.LoggerManager;
 
@@ -208,14 +209,14 @@ public class DBManagement {
 
     /**
      * Execute a SELECT row0, row1 [, ...] FROM TableName
-     * @param row column to SELECT (es. *, name, surname ecc..)
+     * @param column column to SELECT (es. *, name, surname ecc..)
      * @param tableName table to select FROM
      * @return ResultSet with result Data
      * @throws SQLException if SELECT fails
      */
-    public ResultSet executeSelect(String[] row, String tableName) throws SQLException {
+    public ResultSet executeSelect(String[] column, String tableName) throws SQLException {
         StringBuilder build = new StringBuilder();
-        Iterator<String> rowIt = Arrays.stream(row).iterator();
+        Iterator<String> rowIt = Arrays.stream(column).iterator();
 
         build.append("SELECT ");
         while(rowIt.hasNext()) {
@@ -277,8 +278,8 @@ public class DBManagement {
     }
 
     /**
-     * Execute DELETE from Table.
-     * Use a Prepared Statement For Sending Data.
+     * Execute DELETE from Table. <br />
+     * Use a Prepared Statement For Sending Data. <br />
      * DataMap Contains Primary Keys Only!
      * @param dataMap HashMap: K: String with Column Name, E: Data in Object Format see {@link it.unisa.progettodb.datacontrol.ContentPackage#returnDataForQuery(List)}
      * @param tableName Table Name Where Deletion will be performed (String)
@@ -320,8 +321,8 @@ public class DBManagement {
 
 
     /**
-     * Execute UPDATE from Table.
-     * Use a Prepared Statement For Sending Data.
+     * Execute UPDATE from Table. <br />
+     * Use a Prepared Statement For Sending Data. <br />
      * DataMap Contains Only Modified Value!
      * @param dataMap HashMap: K: String with Column Name, E: Data in Object Format see {@link it.unisa.progettodb.datacontrol.ContentPackage#returnDataForQuery(List)}
      * @param tableName Table Name Where Deletion will be performed (String)
@@ -383,6 +384,52 @@ public class DBManagement {
         //Logs
         sendToLog(pStmt.toString(), ActionEnum.Update);
     }
+
+    /* ===================== SELECT WITH CONDITIONS ======================= */
+
+    public ContentWrap executeSelect(String[] columns, String tableName, HashMap<String,Object> conditions) throws SQLException {
+        StringBuilder build = new StringBuilder("SELECT ");
+        if(columns.length == 0) throw new IllegalArgumentException("Columns Must Contain At Least 1 Value (i.e '*') ");
+
+        /* Add Column to Select */
+        for(int i = 0; i < columns.length; i++){
+            if(i == 0) build.append(columns[i]);
+            else build.append(",").append(columns[i]);
+        }
+
+        build.append(" FROM ").append(tableName).append(" WHERE ");
+
+        /* Add Conditions ColumnName */
+        boolean first = true;
+        for(Map.Entry<String, Object> e : conditions.entrySet()) {
+            if (first) {
+                build.append(e.getKey()).append("=?");
+                first = false;
+            } else {
+                build.append(" AND ").append(e.getKey()).append("=?");
+            }
+        }
+        build.append(" ;");
+
+        PreparedStatement pStmt = connectDB.prepareStatement(build.toString());
+
+        /* Fill PreparedStatement with Data Using Statement method */
+        int i = 1;
+        for(Map.Entry<String, Object> e : conditions.entrySet()){
+            if(e.getValue() == null) throw new RuntimeException("Valore Null in UPDATE DBManagement");
+            if(e.getValue() instanceof String s){
+                if(s.isEmpty()) throw new RuntimeException("Stringa Vuota in UPDATE DBManagement");
+            }
+            pStmt.setObject(i++, e.getValue());
+        }
+        System.out.println(pStmt.toString());
+        try(ResultSet rSet = pStmt.executeQuery() ) {
+            this.sendToLog("with Conditions: " + pStmt, ActionEnum.Select);
+
+            return ContentWrap.getContentWrap(this.makeEmptyContentPackage(tableName), rSet);
+        }
+    }
+
 
 
     /* ================== LOGS METOHDS ==================== */
