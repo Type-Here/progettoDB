@@ -4,6 +4,7 @@ import it.unisa.progettodb.dialogs.StartDialog;
 import it.unisa.progettodb.logs.LoggerManager;
 import it.unisa.progettodb.modify.Delete;
 import it.unisa.progettodb.modify.Insert;
+import it.unisa.progettodb.modify.Update;
 import it.unisa.progettodb.sql.DBManagement;
 
 import javax.swing.*;
@@ -171,14 +172,34 @@ public class MainGUI {
      * This Method Sets Listeners for:
      * - Modify Button
      * - Delete Button
-     * in topPanel
+     * in topPanel.
+     * Both Launch a JDialog if a Row in Open Table is Selected and the respective button is pressed.
+     * If no row is selected a warning dialog is shown instead.
      */
     private void setModifyAndDeleteButtonAction() {
-        this.modificaButton.addActionListener(e ->{
 
+        /* - UPDATE Button Listener - */
+        this.modificaButton.addActionListener(e ->{
+            int selectedRow = this.tableView.getSelectedRow();
+
+            if( selectedRow >= 0){
+
+                Update updatePane = new Update(this.getMainContainer(), this.managerDB,
+                        this.currentTable, tableManager.getRowContentPacakgeList(selectedRow));
+                if(updatePane.createDialog()) {
+                    try {
+                        this.tableManager.reloadTable();
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            } else {
+                JOptionPane.showMessageDialog(this.getMainContainer(), "No Row Selected in Table.",
+                        "No Row Selected", JOptionPane.INFORMATION_MESSAGE);
+            }
         });
 
-        /* - Delete Button Listener - */
+        /* - DELETE Button Listener - */
         this.eliminaButton.addActionListener(e ->{
             int selectedRow = this.tableView.getSelectedRow();
 
