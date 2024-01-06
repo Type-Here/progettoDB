@@ -48,6 +48,21 @@ public class Update extends JOptionPane implements DataManipulation{
             if (this.workingTable == null) throw new NullTableException();
             if (!isUpdatable(this.workingTable)) throw new InvalidTableSelectException();
 
+            /*Saves Primary Key Values In Another List*/
+            HashMap<String,Integer> primaryKeyName = managerDB.retrievePrimaryKeys(this.workingTable);
+
+            List<ContentPackage> primaryKeyData = new ArrayList<>();
+            //primaryKeyName.forEach((key, value) -> System.out.println("Primary Key is" + key + "-Seq=" + value)); //DEBUG
+
+            /* Get Only Primary Key attributes and their values from All Data */
+            for(Map.Entry<String, Integer> e: primaryKeyName.entrySet()){
+                ContentPackage c = this.contentPackageList.stream()
+                        .filter(content -> e.getKey().equalsIgnoreCase(content.getColumnName()))
+                        .findFirst().orElseThrow();
+                primaryKeyData.add(c);
+            }
+
+
             /*Removes Data That User Cannot Modify*/
             DataManipulation.removeNonUserModifyAbleData(contentPackageList, this.workingTable);
 
