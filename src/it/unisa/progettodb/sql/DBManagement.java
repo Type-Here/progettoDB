@@ -1,4 +1,4 @@
-package it.unisa.progettodb;
+package it.unisa.progettodb.sql;
 import it.unisa.progettodb.datacontrol.ContentPackage;
 import it.unisa.progettodb.exceptions.NullTableException;
 import it.unisa.progettodb.logs.LoggerManager;
@@ -310,7 +310,7 @@ public class DBManagement {
         /* Fill PreparedStatement with Data Using Statement method */
         i = 1;
         for(Map.Entry<String, Object> e : dataMap.entrySet()){
-            if(e.getValue() == null) throw new RuntimeException("Valore Null in DELETE DB Management");
+            if(e.getValue() == null) throw new RuntimeException("Valore Null in DELETE DBManagement");
             if(e.getValue() instanceof String s){
                 if(s.isEmpty()) throw new RuntimeException("Stringa Vuota in DELETE DBManagement");
             }

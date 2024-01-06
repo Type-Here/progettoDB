@@ -1,6 +1,7 @@
 package it.unisa.progettodb.logs;
 
 import it.unisa.progettodb.*;
+import it.unisa.progettodb.sql.DBManagement;
 
 public class LoggerManager {
     private TextAreaManager textAreaManager;

@@ -1,5 +1,5 @@
 package it.unisa.progettodb.modify;
-import it.unisa.progettodb.DBManagement;
+import it.unisa.progettodb.sql.DBManagement;
 import it.unisa.progettodb.datacontrol.ContentPackage;
 
 import javax.swing.*;

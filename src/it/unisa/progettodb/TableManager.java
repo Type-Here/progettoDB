@@ -1,6 +1,7 @@
 package it.unisa.progettodb;
 
 import it.unisa.progettodb.datacontrol.ContentPackage;
+import it.unisa.progettodb.sql.DBManagement;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;

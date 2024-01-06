@@ -1,6 +1,7 @@
-package it.unisa.progettodb;
+package it.unisa.progettodb.dialogs;
 
 import it.unisa.progettodb.logs.LoggerManager;
+import it.unisa.progettodb.sql.DBManagement;
 
 import javax.swing.*;
 import java.awt.*;
