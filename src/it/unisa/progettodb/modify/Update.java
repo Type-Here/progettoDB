@@ -62,14 +62,13 @@ public class Update extends JOptionPane implements DataManipulation{
                 primaryKeyData.add(c);
             }
 
-
-            /*Removes Data That User Cannot Modify*/
+            /* DATABASE SPECIFIC */
+            /* Removes Other Data That User Cannot Modify (derived attribute, ...) */
             DataManipulation.removeNonUserModifyAbleData(contentPackageList, this.workingTable);
 
-            //Primary Keys Won't Be Remove They Will Grayed-Out for Better View
-            HashMap<String, Integer> primaryKeys = this.managerDB.retrievePrimaryKeys(this.workingTable);
+            //NB: Primary Key Values Won't Be Remove They Will Grayed-Out for Better View
             /*Create JPanel*/
-            setPanel(contentPackageList, primaryKeys);
+            setPanel(contentPackageList, primaryKeyName);
             /* Show First Dialog */
             int result = JOptionPane.showConfirmDialog(this.owner, mainDialogPanel, "Insert Data in Table",
                                                         this.optionType, this.messageType);
@@ -82,11 +81,19 @@ public class Update extends JOptionPane implements DataManipulation{
                 int res = finalCheckDialog(ContentPackage.returnDataMapAsString(this.contentPackageList),
                                             ContentPackage.returnDataMapAsString(updateData));
                 if(res == JOptionPane.OK_OPTION){
-                    //EXECUTE QUERY
-                } else return false;
-            } else return false;
+
+                    /*MAIN ACTION: Execute Update */
+                    this.managerDB.executeUpdate(ContentPackage.returnDataForQuery(updateData),
+                                                this.workingTable,
+                                                ContentPackage.returnDataForQuery(primaryKeyData));
+                    return true;
+                }
+            }
+            return false;
 
         } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this.owner, "Errore SQL: \n" + e.getMessage() + '\n',
+                    "Errore", JOptionPane.ERROR_MESSAGE);
             throw new RuntimeException(e);
 
         } catch (NullTableException | InvalidTableSelectException e){
@@ -200,8 +207,10 @@ public class Update extends JOptionPane implements DataManipulation{
         }
         textArea.append("\nConfermi? \n");
         scrollPane.setViewportView(textArea);
+        JPanel window = new JPanel();
+        window.add(scrollPane);
 
-        return JOptionPane.showConfirmDialog(this.mainDialogPanel, scrollPane, "Conferma Dati",
+        return JOptionPane.showConfirmDialog(this.mainDialogPanel, window, "Conferma Dati",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
     }
 

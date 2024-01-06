@@ -8,7 +8,7 @@ import javax.sql.rowset.RowSetProvider;
 import java.sql.*;
 import java.util.*;
 
-@SuppressWarnings("CallToPrintStackTrace")
+@SuppressWarnings({"CallToPrintStackTrace", "SpellCheckingInspection"})
 public class DBManagement {
     private Connection connectDB;
     private final String DBName;
@@ -157,12 +157,7 @@ public class DBManagement {
         ResultSet rs = metaData.getPrimaryKeys("ATI", null, tableName);
         //Printing the column name and size
         while (rs.next()){
-            /*System.out.println("Table name: "+rs.getString("TABLE_NAME"));
-            System.out.println("Column name: "+rs.getString("COLUMN_NAME"));
-            System.out.println("Catalog name: "+rs.getString("TABLE_CAT"));
-            System.out.println("Primary key sequence: "+rs.getString("KEY_SEQ"));
-            System.out.println("Primary key name: "+rs.getString("PK_NAME"));
-            System.out.println(" ");*/
+            /*System.out.println("Tab Name: " + rs.getString("TABLE_NAME"));  "COLUMN_NAME" "TABLE_CAT" "KEY_SEQ" "PK_NAME" */
             resultMap.put(rs.getString("COLUMN_NAME"), rs.getInt("KEY_SEQ"));
         }
 
@@ -334,15 +329,17 @@ public class DBManagement {
             if(i++ == 0) {
                 buildIns.append(e.getKey()).append("=?");
             } else {
-                buildIns.append(" AND ").append(e.getKey()).append("=?");
+                buildIns.append(", ").append(e.getKey()).append("=?");
             }
         }
 
         buildIns.append(" WHERE ");
 
+        boolean first = true;
         for(Map.Entry<String, Object> e : primaryKeyValues.entrySet()){
-            if(i++ == 0) {
+            if(first) {
                 buildIns.append(e.getKey()).append("=?");
+                first = false;
             } else {
                 buildIns.append(" AND ").append(e.getKey()).append("=?");
             }
@@ -362,7 +359,6 @@ public class DBManagement {
             pStmt.setObject(i++, e.getValue());
         }
 
-        i = 1;
         for(Map.Entry<String, Object> e : primaryKeyValues.entrySet()){
             if(e.getValue() == null) throw new RuntimeException("Valore Null in UPDATE DBManagement");
             if(e.getValue() instanceof String s){
@@ -372,10 +368,10 @@ public class DBManagement {
         }
 
         /*Execute UPDATE Query*/
-        /*pStmt.executeUpdate();*/
+        pStmt.executeUpdate();
 
         //Logs
-        sendToLog(pStmt.toString(), ActionEnum.Delete);
+        sendToLog(pStmt.toString(), ActionEnum.Update);
     }
 
 
