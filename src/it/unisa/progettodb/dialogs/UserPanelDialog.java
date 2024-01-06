@@ -15,6 +15,7 @@ import java.util.Locale;
 
 public class UserPanelDialog {
     /**
+     * Create a GridLayout Panel. <br />
      * Static Method For Creating User Panels from List of Content Packages <br />
      * Set Up the MainDialogPanel. <br />
      * Each Row Has Label and UserInput Field; <br />

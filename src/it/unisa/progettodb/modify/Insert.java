@@ -58,8 +58,6 @@ public class Insert extends JOptionPane implements DataManipulation{
             /*Remove Any Column the User Should Not Insert. This is DataBase Specific*/
             DataManipulation.removeNonUserModifyAbleData(listCP,this.workingTable);
 
-            System.out.println("CC: " + listCP);
-
             /* Open MAIN DIALOG for User Input */
             setPanel(listCP);
 
@@ -97,7 +95,8 @@ public class Insert extends JOptionPane implements DataManipulation{
 
     /**
      * NEW SET PANEL <br />
-     * Set Up the MainDialogPanel with each row a filed to insert data. br />
+     * This Method uses UserPanelDialog.createUserInputPanel to create a JPanel that can be used in a Dialog.
+     * Set Up the MainDialogPanel with each row a filed to insert data. <br />
      * Use DocumentFilter and inputValidator to Check On Input User.
      * @param contentPackageList containing only MetaData (index, columnName, precision, isNullable, JDBCType)
      */
