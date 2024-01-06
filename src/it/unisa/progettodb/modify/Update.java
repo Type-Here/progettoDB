@@ -12,7 +12,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
 
 public class Update extends JOptionPane implements DataManipulation{
@@ -21,7 +21,7 @@ public class Update extends JOptionPane implements DataManipulation{
     private final String workingTable;
     private final Component owner;
     private JPanel mainDialogPanel;
-    private List<ContentPackage> contentPackageList;
+    private final List<ContentPackage> contentPackageList; //Old Data
 
     public Update(Component owner, DBManagement managerDB, String workingTable, List<ContentPackage> contentPackageList) {
         super(null, JOptionPane.INFORMATION_MESSAGE, JOptionPane.OK_CANCEL_OPTION );
@@ -37,7 +37,7 @@ public class Update extends JOptionPane implements DataManipulation{
      * Check if table is not null or is Not Possible to Update (i.e. a view). <br />
      * - Get List of Content Package With makeEmptyContentPackage for managerDB. <br />
      * - Then Call launchCheckThenDialog to confirm data. <br />
-     * - Then if all ok call sendDataToInsert() to execute query by managerDB. <br />
+     * - Then if all ok call sendDataToUpdate() to execute query by managerDB. <br />
      * @return true if data in table are modified, false if not.
      * This is not an error check because will return false even if user cancel operation!
      */
@@ -54,19 +54,27 @@ public class Update extends JOptionPane implements DataManipulation{
             int result = JOptionPane.showConfirmDialog(this.owner, mainDialogPanel, "Insert Data in Table",
                                                         this.optionType, this.messageType);
             if(result == JOptionPane.OK_OPTION){
-                System.out.println("OK");
-            }else return false;
+                List<ContentPackage> emptyData = managerDB.makeEmptyContentPackage(this.workingTable);
+                DataManipulation.removeNonUserModifyAbleData(emptyData, this.workingTable);
 
-        /*} catch (SQLException e) {
-            throw new RuntimeException(e);*/
+                List<ContentPackage> updateData = validateData(emptyData, this.contentPackageList);
+                int res = finalCheckDialog(ContentPackage.returnDataMapAsString(this.contentPackageList),
+                                            ContentPackage.returnDataMapAsString(updateData));
+                if(res == JOptionPane.OK_OPTION){
+                    //EXECUTE QUERY
+                } else return false;
+            } else return false;
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
 
         } catch (NullTableException | InvalidTableSelectException e){
             JOptionPane.showMessageDialog(this.owner, e.getMessage() + "\nSeleziona (altra) Tabella e Riprova",
                     "Attenzione", JOptionPane.ERROR_MESSAGE);
 
-        /*} catch (ValidatorException e) {
+        } catch (ValidatorException e) {
             JOptionPane.showMessageDialog(this.mainDialogPanel, "Data Not Valid: \n" + e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);*/
+                    "Warning", JOptionPane.ERROR_MESSAGE);
         }
 
         return false;
@@ -105,8 +113,73 @@ public class Update extends JOptionPane implements DataManipulation{
     }
 
 
+    /**
+     * Validate Data Entered by User. <br />
+     * Calls retrieveAndValidate method that: <br/>
+     * - Retrieve data from MainPanel
+     * - Check if data Modified Data is well Formatted
+     * Then this method filter only updated data. If new List is empty throw an error.
+     * Else return the updated ContentPackage list
+     * @param emptyData containing metadata for each column
+     * @param oldData containing OldData
+     * @return A List of ContentPackage with only updated values
+     * @throws ValidatorException if data validation fails or no data is actually modified
+     */
+    private List<ContentPackage> validateData(List<ContentPackage> emptyData, List<ContentPackage> oldData) throws ValidatorException {
 
-    /* THIS CHECK IS DATABSE SPECIFIC */
+        /* Retrieve Data from Panel. It also checks for Null or Empty Strings if Field is not Nullable. */
+        List<ContentPackage> newData = DataManipulation.retrieveAndValidate(emptyData, this.mainDialogPanel);
+
+        /* Remove Data if Equal To OldData to Retain only Updated */
+        newData.removeIf(c -> oldData.stream().anyMatch(old -> {
+            if (old.getColumnName().equalsIgnoreCase(c.getColumnName())) {
+                return c.getDataString().equals(old.getDataString());
+            }
+            return false;
+        }));
+
+        /*If All newData equal oldData, newData isEmpty and en exception is thrown */
+        if(newData.isEmpty()) throw new ValidatorException("No Data Where Modified");
+        return newData;
+    }
+
+    /**
+     * Dialog to verify data updated by User before actually Updating. <br />
+     * - Set Second Panel before Finalizing Insert Query. <br />
+     * - Let User Control if Data is Correct.
+     * @param oldData All Old Data: hashmap in string, string format to print (K:column name, E:data)
+     * @param updatedData Only Updated Data: hashmap in string, string format to print (K:column name, E:data)
+     * @return JOptionPane.OK_OPTION value if user confirm, CANCEL otherwise
+     */
+    private int finalCheckDialog(HashMap<String, String> oldData, HashMap<String, String>updatedData){
+        JScrollPane scrollPane = new JScrollPane( JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setPreferredSize(new Dimension(300, 200));
+
+        JTextArea textArea = new JTextArea();
+        textArea.setPreferredSize(new Dimension(250, 150));
+        textArea.setEditable(false);
+        textArea.setFont(new Font(Font.DIALOG, Font.PLAIN, 12));
+        textArea.setText("Dati Modificati: \n\n");
+
+        for(Map.Entry<String, String> e : oldData.entrySet()){
+            if(updatedData.keySet().stream().anyMatch(newK -> e.getKey().equals(newK))){
+                textArea.append(' ' + e.getKey() + ": \n" + "  Old: " + e.getValue() + '\n');
+                textArea.append("  New: " + updatedData.get(e.getKey()) + '\n');
+            } else {
+                textArea.append(" Not Modified: " + e.getKey() + ": " + e.getValue() + " \n");
+            }
+            textArea.append("\n");
+        }
+        textArea.append("\nConfermi? \n");
+        scrollPane.setViewportView(textArea);
+
+        return JOptionPane.showConfirmDialog(this.mainDialogPanel, scrollPane, "Conferma Dati",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+    }
+
+
+
+    /* THIS CHECK IS DATABASE SPECIFIC */
 
     /**
      * Check if Current Working Table Data can be Updated

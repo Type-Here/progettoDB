@@ -110,7 +110,7 @@ public class Insert extends JOptionPane implements DataManipulation{
      * Before is performed a validation for some of more sensible data (IDs like Targa, Matricola ecc)
      * @param emptyData List of Content Package containing only MetaData for Each Column
      * @return List&lt;ContentPackage&gt; With All Data and MetaData needed For Insertion
-     * @throws ValidatorException if Validation Fails: Empty Strings, NON-Valid Formatting (i.e. Matricola must have AA0000 format) ecc..
+     * @throws ValidatorException if Validation Fails: Empty Strings, NON-Valid Formatting (i.e. Matricola must have AA0000 format) ecc...
      */
     private List<ContentPackage> populateAndValidateData(List<ContentPackage> emptyData) throws ValidatorException {
         Component[] components = mainDialogPanel.getComponents();
