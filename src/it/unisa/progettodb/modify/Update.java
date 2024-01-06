@@ -191,7 +191,6 @@ public class Update extends JOptionPane implements DataManipulation{
         scrollPane.setPreferredSize(new Dimension(300, 200));
 
         JTextArea textArea = new JTextArea();
-        textArea.setPreferredSize(new Dimension(250, 150));
         textArea.setEditable(false);
         textArea.setFont(new Font(Font.DIALOG, Font.PLAIN, 12));
         textArea.setText("Dati Modificati: \n\n");

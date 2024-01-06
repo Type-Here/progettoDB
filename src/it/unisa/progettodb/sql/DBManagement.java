@@ -318,6 +318,16 @@ public class DBManagement {
         sendToLog(pStmt.toString(), ActionEnum.Delete);
     }
 
+
+    /**
+     * Execute UPDATE from Table.
+     * Use a Prepared Statement For Sending Data.
+     * DataMap Contains Only Modified Value!
+     * @param dataMap HashMap: K: String with Column Name, E: Data in Object Format see {@link it.unisa.progettodb.datacontrol.ContentPackage#returnDataForQuery(List)}
+     * @param tableName Table Name Where Deletion will be performed (String)
+     * @param primaryKeyValues Contains PrimaryKeys Column Name and Value to Retrieve a Specific Element to Update
+     * @throws SQLException if Insert Fails
+     */
     public void executeUpdate(HashMap<String, Object> dataMap, String tableName,  HashMap<String,Object> primaryKeyValues) throws SQLException {
         StringBuilder buildIns = new StringBuilder();
         buildIns.append("UPDATE ").append(tableName).append(" SET ");
