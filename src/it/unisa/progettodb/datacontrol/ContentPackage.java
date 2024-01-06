@@ -62,6 +62,7 @@ public class ContentPackage {
     }
 
 
+    /* ============== STATIC METHODS TO WRAP DATA ========= */
 
     /**
      * FORMAT FOR QUERY <br />
