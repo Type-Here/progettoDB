@@ -149,7 +149,7 @@ public class DBManagement {
      * @throws SQLException if metadata getPrimaryKeys fails
      */
     public HashMap<String, Integer> retrievePrimaryKeys(String tableName) throws SQLException {
-        HashMap<String, Integer> resultMap = new HashMap<>();
+        HashMap<String, Integer> resultMap = new LinkedHashMap<>();
         //Retrieving meta data
         DatabaseMetaData metaData = connectDB.getMetaData();
 
@@ -319,6 +319,61 @@ public class DBManagement {
 
         /*Execute Delete Query*/
         pStmt.executeUpdate();
+        //Logs
+        sendToLog(pStmt.toString(), ActionEnum.Delete);
+    }
+
+    public void executeUpdate(HashMap<String, Object> dataMap, String tableName,  HashMap<String,Object> primaryKeyValues) throws SQLException {
+        StringBuilder buildIns = new StringBuilder();
+        buildIns.append("UPDATE ").append(tableName).append(" SET ");
+
+        // Statement could be also created here but prone to SQL Injection.
+        // So This Add Controlled Data (Column Names and Number of Values)
+        int i = 0;
+        for(Map.Entry<String, Object> e : dataMap.entrySet()){
+            if(i++ == 0) {
+                buildIns.append(e.getKey()).append("=?");
+            } else {
+                buildIns.append(" AND ").append(e.getKey()).append("=?");
+            }
+        }
+
+        buildIns.append(" WHERE ");
+
+        for(Map.Entry<String, Object> e : primaryKeyValues.entrySet()){
+            if(i++ == 0) {
+                buildIns.append(e.getKey()).append("=?");
+            } else {
+                buildIns.append(" AND ").append(e.getKey()).append("=?");
+            }
+        }
+
+        buildIns.append(" ;");
+
+        PreparedStatement pStmt = connectDB.prepareStatement(buildIns.toString());
+
+        /* Fill PreparedStatement with Data Using Statement method */
+        i = 1;
+        for(Map.Entry<String, Object> e : dataMap.entrySet()){
+            if(e.getValue() == null) throw new RuntimeException("Valore Null in UPDATE DBManagement");
+            if(e.getValue() instanceof String s){
+                if(s.isEmpty()) throw new RuntimeException("Stringa Vuota in UPDATE DBManagement");
+            }
+            pStmt.setObject(i++, e.getValue());
+        }
+
+        i = 1;
+        for(Map.Entry<String, Object> e : primaryKeyValues.entrySet()){
+            if(e.getValue() == null) throw new RuntimeException("Valore Null in UPDATE DBManagement");
+            if(e.getValue() instanceof String s){
+                if(s.isEmpty()) throw new RuntimeException("Stringa Vuota in UPDATE DBManagement");
+            }
+            pStmt.setObject(i++, e.getValue());
+        }
+
+        /*Execute UPDATE Query*/
+        /*pStmt.executeUpdate();*/
+
         //Logs
         sendToLog(pStmt.toString(), ActionEnum.Delete);
     }
