@@ -22,8 +22,11 @@ public class DataMapFormatter {
     }
 
     public static Object objectFromData(JDBCType type, String data){
+
+        /* Boolean Parse would return true only if string == "true"! */
         if(type == JDBCType.BOOLEAN || type == JDBCType.BIT){
-            return Boolean.parseBoolean(data);
+            return ("1".equalsIgnoreCase(data) || "yes".equalsIgnoreCase(data) ||
+                    "true".equalsIgnoreCase(data) || "on".equalsIgnoreCase(data));
 
         } else if(type.equals(JDBCType.DOUBLE) || type.equals(JDBCType.FLOAT) || type.equals(JDBCType.DECIMAL)){
             return Double.parseDouble(data);
