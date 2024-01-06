@@ -63,13 +63,13 @@ public class ContentPackage {
 
 
     /**
-     * FORMAT FOR QUERY
-     * Static Method
-     * Format Data For PreparedStatement Query in DBManagement Object.
-     * Each DataString is transformed to its Object (es. if int -> parsed to integer) Based on its JBDCType.
+     * FORMAT FOR QUERY <br />
+     * Static Method <br />
+     * Format Data For PreparedStatement Query in DBManagement Object. <br />
+     * Each DataString is transformed to its Object (es. if int -> parsed to integer) Based on its JBDCType. <br />
      * A HashMap&lt;String,Object&gt; is Created.
      * @param contentPackageList List of ContentPackages to Transform
-     * @return HashMap&lt;String,Object&gt; K: Column Name, E:Object of Data
+     * @return HashMap&lt;String,Object&gt; <br /> K: Column Name, E:Object of Data
      */
     public static HashMap<String, Object> returnDataForQuery(List<ContentPackage> contentPackageList){
         HashMap<String, Object> resultObjectMap = new HashMap<>();

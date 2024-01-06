@@ -66,7 +66,7 @@ public class TableManager {
         return tables;
     }
 
-    public List<ContentPackage> getRowContentPacakgeList(int row){
+    public List<ContentPackage> getRowContentPackageList(int row){
         List<ContentPackage> res = new ArrayList<>();
         for(int i = 0; i < tableColumnList.size(); i++){
             String data = this.table.getModel().getValueAt(row, i).toString();
@@ -74,6 +74,14 @@ public class TableManager {
             res.add(new ContentPackage(i +1, data, tableColumnList.get(i), this.typeList.get(i)) );
         }
         return res;
+    }
+
+    /**
+     * Return Current Working Table in TableManager
+     * @return Table Name String
+     */
+    public String getTableName() {
+        return tableName;
     }
 
     /* PRIVATE METHODS */

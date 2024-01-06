@@ -185,7 +185,7 @@ public class MainGUI {
             if( selectedRow >= 0){
 
                 Update updatePane = new Update(this.getMainContainer(), this.managerDB,
-                        this.currentTable, tableManager.getRowContentPacakgeList(selectedRow));
+                        this.currentTable, tableManager.getRowContentPackageList(selectedRow));
                 if(updatePane.createDialog()) {
                     try {
                         this.tableManager.reloadTable();
@@ -203,10 +203,14 @@ public class MainGUI {
         this.eliminaButton.addActionListener(e ->{
             int selectedRow = this.tableView.getSelectedRow();
 
+            /*A Check Before Altering Table*/
+            if(!this.currentTable.equals(tableManager.getTableName())) throw new RuntimeException("Data is Not in SYNC!");
+
+            /*If A Row is Selected Do:*/
             if( selectedRow >= 0){
 
                 Delete deletePane = new Delete(this.getMainContainer(), this.managerDB,
-                        this.currentTable, tableManager.getRowContentPacakgeList(selectedRow));
+                        this.currentTable, tableManager.getRowContentPackageList(selectedRow));
                 if(deletePane.createDialog()) {
                     try {
                         this.tableManager.reloadTable();

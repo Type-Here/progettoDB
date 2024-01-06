@@ -32,9 +32,11 @@ public class Delete implements DataManipulation {
         if(checkDialog(ContentPackage.returnDataMapAsString(this.contentPackageList)) == JOptionPane.OK_OPTION){
             try {
                 HashMap<String,Integer> primaryKeys = managerDB.retrievePrimaryKeys(this.workingTable);
-                List<ContentPackage> filteredKeys = new ArrayList<>();
-                primaryKeys.entrySet().forEach(System.out::println);
 
+                List<ContentPackage> filteredKeys = new ArrayList<>();
+                //primaryKeys.forEach((key, value) -> System.out.println("Primary Key is" + key + "-Seq=" + value)); //DEBUG
+
+                /* Get Only Primary Key attributes and their values from All Data */
                 for(Map.Entry<String, Integer> e: primaryKeys.entrySet()){
                     ContentPackage c = this.contentPackageList.stream()
                             .filter(content -> e.getKey().equalsIgnoreCase(content.getColumnName()))
@@ -42,8 +44,13 @@ public class Delete implements DataManipulation {
                     filteredKeys.add(c);
                 }
 
+                System.out.println("Filtered: " + filteredKeys);
+
+                /*MAIN QUERY EXECUTION - DELETE*/
                 managerDB.executeDelete(ContentPackage.returnDataForQuery(filteredKeys), this.workingTable);
+
                 return true;
+
             } catch (SQLException e) {
                 JOptionPane.showMessageDialog(this.owner, "Errore SQL in Eliminazione Dato: \n" + e.getMessage(),
                         "Error Delete", JOptionPane.ERROR_MESSAGE);
