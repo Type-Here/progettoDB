@@ -44,16 +44,22 @@ public class Update extends JOptionPane implements DataManipulation{
     @Override
     public boolean createDialog() {
         try {
+            /* Checks Working Table */
             if (this.workingTable == null) throw new NullTableException();
             if (!isUpdatable(this.workingTable)) throw new InvalidTableSelectException();
+
             /*Removes Data That User Cannot Modify*/
             DataManipulation.removeNonUserModifyAbleData(contentPackageList, this.workingTable);
+
+            //Primary Keys Won't Be Remove They Will Grayed-Out for Better View
+            HashMap<String, Integer> primaryKeys = this.managerDB.retrievePrimaryKeys(this.workingTable);
             /*Create JPanel*/
-            setPanel(contentPackageList);
+            setPanel(contentPackageList, primaryKeys);
             /* Show First Dialog */
             int result = JOptionPane.showConfirmDialog(this.owner, mainDialogPanel, "Insert Data in Table",
                                                         this.optionType, this.messageType);
             if(result == JOptionPane.OK_OPTION){
+
                 List<ContentPackage> emptyData = managerDB.makeEmptyContentPackage(this.workingTable);
                 DataManipulation.removeNonUserModifyAbleData(emptyData, this.workingTable);
 
@@ -88,7 +94,7 @@ public class Update extends JOptionPane implements DataManipulation{
      *
      * @param contentPackageList containing only MetaData (index, columnName, precision, isNullable, JDBCType)
      */
-    private void setPanel(List<ContentPackage> contentPackageList) {
+    private void setPanel(List<ContentPackage> contentPackageList, HashMap<String, Integer> primaryKeys) {
         this.mainDialogPanel = UserPanelDialog.createUserInputPanel(contentPackageList);
 
         Component[] c = mainDialogPanel.getComponents();
@@ -99,11 +105,18 @@ public class Update extends JOptionPane implements DataManipulation{
                 Component[] internalComp = internal.getComponents();
 
                 for(Component comp : internalComp){
-
-                    if(comp instanceof JFormattedTextField f){
-                        f.setText(contentPackageList.get(i++).getDataString());
-                    } else if(comp instanceof DatePicker d){
-                        d.setDate(LocalDate.parse(contentPackageList.get(i++).getDataString()));
+                    if(comp instanceof JFormattedTextField || comp instanceof DatePicker) {
+                        ContentPackage cp = contentPackageList.get(i++);
+                        if (primaryKeys.keySet().stream().anyMatch(key -> cp.getColumnName().equalsIgnoreCase(key))) {
+                            comp.setEnabled(false);
+                            ((JComponent) comp).setToolTipText("Disable Update On Key");
+                        }
+                        if (comp instanceof JFormattedTextField f) {
+                            f.setText(cp.getDataString());
+                        } else {
+                            DatePicker d = (DatePicker) comp;
+                            d.setDate(LocalDate.parse(cp.getDataString()));
+                        }
                     }
                 }
             } else {
