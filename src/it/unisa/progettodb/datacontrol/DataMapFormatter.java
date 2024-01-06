@@ -2,14 +2,16 @@ package it.unisa.progettodb.datacontrol;
 
 import java.sql.*;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public class DataMapFormatter {
-    private static HashMap<String,Object> formatData(ResultSetMetaData metaData, List<String> newData,
-                                                    HashMap<Integer, JDBCType> dataIndexType) throws SQLException {
 
-        HashMap<String,Object> dataFormatted = new HashMap<>();
+    private static HashMap<String,Object> formatData(ResultSetMetaData metaData, List<String> newData,
+                                                     HashMap<Integer, JDBCType> dataIndexType) throws SQLException {
+
+        HashMap<String,Object> dataFormatted = new LinkedHashMap<>();
 
         for(Map.Entry<Integer, JDBCType> e : dataIndexType.entrySet()){
             dataFormatted.put( metaData.getColumnName(e.getKey()),

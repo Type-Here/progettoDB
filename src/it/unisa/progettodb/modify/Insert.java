@@ -311,7 +311,7 @@ public class Insert extends JOptionPane implements DataManipulation{
     private  HashMap<Integer, JDBCType> setPanelOld(ResultSetMetaData metaData, List<JDBCType> dataType) throws SQLException {
 
         //Save Index of MetaData Column that will be visible in Dialog Pane.
-        HashMap<Integer, JDBCType> insertDataIndexType = new HashMap<>();
+        HashMap<Integer, JDBCType> insertDataIndexType = new LinkedHashMap<>();
 
         mainDialogPanel = new JPanel(new GridLayout(dataType.size(), 2));
         int i = 1;

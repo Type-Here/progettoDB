@@ -2,6 +2,7 @@ package it.unisa.progettodb.datacontrol;
 
 import java.sql.JDBCType;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
@@ -72,7 +73,7 @@ public class ContentPackage {
      * @return HashMap&lt;String,Object&gt; <br /> K: Column Name, E:Object of Data
      */
     public static HashMap<String, Object> returnDataForQuery(List<ContentPackage> contentPackageList){
-        HashMap<String, Object> resultObjectMap = new HashMap<>();
+        HashMap<String, Object> resultObjectMap = new LinkedHashMap<>();
         for(ContentPackage c: contentPackageList){
             Object o = DataMapFormatter.objectFromData(c.getType(), c.getDataString());
             resultObjectMap.put(c.getColumnName(), o);
@@ -89,7 +90,7 @@ public class ContentPackage {
      * @return HashMap&lt;String,Object&gt; K: Column Name, E:Data in String Format
      */
     public static HashMap<String, String> returnDataMapAsString(List<ContentPackage> contentPackageList){
-        HashMap<String, String> resultStringMap = new HashMap<>();
+        HashMap<String, String> resultStringMap = new LinkedHashMap<>();
         for(ContentPackage c: contentPackageList){
             resultStringMap.put(c.getColumnName(), c.getDataString());
         }
