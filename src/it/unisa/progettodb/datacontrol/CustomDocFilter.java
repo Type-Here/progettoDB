@@ -33,8 +33,7 @@ public class CustomDocFilter extends DocumentFilter {
 
         if (test(sb.toString())) {
             super.insertString(fb, offset, string, attr);
-        } else {
-            // warn the user and don't allow the insert
+        //} else { // warn the user and don't allow the insert
         }
     }
 
@@ -65,8 +64,7 @@ public class CustomDocFilter extends DocumentFilter {
 
         if (test(sb.toString())) {
             super.replace(fb, offset, length, text, attrs);
-        } else {
-            // warn the user and don't allow the insert
+        //} else { // warn the user and don't allow the insert
         }
 
     }
@@ -80,14 +78,11 @@ public class CustomDocFilter extends DocumentFilter {
         sb.append(doc.getText(0, doc.getLength()));
         sb.delete(offset, offset + length);
 
-        System.out.println(fb.getDocument().getText(0, doc.getLength()) + " \n" + offset + " " + length + " " + sb);
-
         if(sb.isEmpty()){ //Aggiunto altrimenti non cancella ultimo carattere
             super.remove(fb, offset, length);
         } else if (test(sb.toString())) {
             super.remove(fb, offset, length);
-        } else {
-            // warn the user and don't allow the insert
+        //} else { // warn the user and don't allow the insert
         }
 
     }

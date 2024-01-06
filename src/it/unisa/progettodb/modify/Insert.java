@@ -77,6 +77,8 @@ public class Insert extends JOptionPane implements DataManipulation{
             }
             return false;
         } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this.owner, "Errore SQL: \n" + e.getMessage() + '\n',
+                    "Attenzione", JOptionPane.ERROR_MESSAGE);
             throw new RuntimeException(e);
 
         } catch (NullTableException | InvalidTableSelectException e){
@@ -199,13 +201,8 @@ public class Insert extends JOptionPane implements DataManipulation{
      * Last Method To Be Called.
      * Send Data To Insertion. Dialog if Fails.
      */
-    private void sendDataToInsert() {
-
-        try {
-            managerDB.executeInsert(ContentPackage.returnDataForQuery(this.contentPackageList), this.workingTable);
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this.mainDialogPanel, "Error: \n" + e.getMessage(), "Errore SQL", JOptionPane.ERROR_MESSAGE);
-        }
+    private void sendDataToInsert() throws SQLException{
+        managerDB.executeInsert(ContentPackage.returnDataForQuery(this.contentPackageList), this.workingTable);
     }
 
 
