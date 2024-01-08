@@ -130,11 +130,15 @@ public class Insert extends JOptionPane implements DataManipulation{
                     if(comp instanceof JFormattedTextField f){
                         newData.add(f.getText());
                     } else if(comp instanceof DatePicker d){
-                        newData.add(d.getDate().toString());
+                        try {
+                            newData.add(d.getDate().toString());
+                        } catch (RuntimeException e){
+                            throw new ValidatorException(e.getMessage());
+                        }
                     }
                 }
             } else {
-                throw new RuntimeException("Something getting info gone wrong");
+                throw new RuntimeException("Something gone wrong");
             }
         }
 
@@ -266,7 +270,7 @@ public class Insert extends JOptionPane implements DataManipulation{
                     }
                 }
             } else {
-                throw new RuntimeException("Something getting info gone wrong");
+                throw new RuntimeException("Something gone wrong");
             }
         }
 

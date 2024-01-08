@@ -334,7 +334,11 @@ public class MainGUI {
         rimuoviDipendente.addActionListener(e ->{
             ReleaseWorker releaseWorker = new ReleaseWorker(this.getMainContainer(), this.managerDB);
             if(releaseWorker.createDialog()){
-
+                try {
+                    this.tableManager.reloadTable();
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
         /*TODO*/
