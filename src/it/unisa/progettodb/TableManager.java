@@ -1,6 +1,7 @@
 package it.unisa.progettodb;
 
 import it.unisa.progettodb.datacontrol.ContentPackage;
+import it.unisa.progettodb.datacontrol.ContentWrap;
 import it.unisa.progettodb.sql.DBManagement;
 
 import javax.swing.*;
@@ -8,6 +9,7 @@ import javax.swing.table.DefaultTableModel;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class TableManager {
     private String tableName;
@@ -111,6 +113,7 @@ public class TableManager {
 
         /* GetColumnLabel returns String with name of column of index i. It Starts From 1!*/
         this.tableColumnList.clear();
+        this.typeList.clear();
         for (int i = 0; i < count; i++)
         {
             columnName[i] = metaData.getColumnLabel(i + 1);
@@ -138,6 +141,28 @@ public class TableManager {
             }
             model.addRow(row.toArray());
         }
+    }
+
+    /**
+     * OverLoaded Method. Sets a New Model Table based on ContentWrap Data.
+     * @param data ContentWrap where all data is loaded
+     */
+    public void setTable(ContentWrap data){
+        DefaultTableModel model = newModel();
+        this.tableColumnList.clear();
+        this.typeList.clear();
+
+        for(ContentPackage c: data.getMetaData()){
+            model.addColumn(c.getColumnName());
+            this.tableColumnList.add(c.getColumnName());
+            this.typeList.add(c.getType());
+        }
+
+        for(Map.Entry<Integer, List<String>> e: data.getRows().entrySet()){
+            List<String> row = e.getValue();
+            model.addRow(row.toArray());
+        }
+        this.table.setModel(model);
     }
 
     /**
