@@ -59,6 +59,12 @@
               <text value="&amp;Elimina"/>
             </properties>
           </component>
+          <component id="716f0" class="javax.swing.JButton" binding="dettagliButton">
+            <constraints/>
+            <properties>
+              <text value="Dettagli"/>
+            </properties>
+          </component>
         </children>
       </grid>
       <scrollpane id="11f3">

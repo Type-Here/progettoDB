@@ -1,10 +1,12 @@
 package it.unisa.progettodb;
 
+import it.unisa.progettodb.datacontrol.ContentWrap;
 import it.unisa.progettodb.dialogs.StartDialog;
 import it.unisa.progettodb.logs.LoggerManager;
 import it.unisa.progettodb.modify.Delete;
 import it.unisa.progettodb.modify.Insert;
 import it.unisa.progettodb.modify.Update;
+import it.unisa.progettodb.operations.Operations;
 import it.unisa.progettodb.operations.ReleaseWorker;
 import it.unisa.progettodb.sql.DBManagement;
 
@@ -26,6 +28,7 @@ public class MainGUI {
     private JTextArea textAreaLog;
     private JButton modificaButton;
     private JButton eliminaButton;
+    private JButton dettagliButton;
     /* Custom Objects */
     private final JMenuBar menuBar;
     private DBManagement managerDB;
@@ -65,6 +68,10 @@ public class MainGUI {
         /*Modify Data Listeners*/
         setModifyAndDeleteButtonAction();
 
+        /*Set Dettagli Button Listener*/
+        setDettagliButtonListener();
+
+        /*Set Combo Box Listener*/
         setComboBoxListener();
     }
 
@@ -109,10 +116,11 @@ public class MainGUI {
         /*KeyboardFocusManager is one of main class to manage focus in Java*/
         /*When table nor modify or delete button are on focus deselect row */
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addPropertyChangeListener("focusOwner", evt -> {
+            System.out.println(evt.getNewValue());
             /* Property Change Event */
             Object c = evt.getNewValue();
             if(c == null) return;
-            if(!(c.equals(tableView) || c.equals(modificaButton) || c.equals(eliminaButton)) ){
+            if( !( c.equals(tableView) || c.equals(modificaButton) || c.equals(eliminaButton) || c.equals(dettagliButton) ) ){
                 tableView.clearSelection();
                 tableView.getSelectionModel().clearSelection();
             }
@@ -123,6 +131,9 @@ public class MainGUI {
         this.tableView.addPropertyChangeListener(e->{
             this.modificaButton.setEnabled(false);
             this.eliminaButton.setEnabled(false);
+            this.dettagliButton.setEnabled(false);
+            if(this.currentTable == null || !this.currentTable.equalsIgnoreCase("consegna"))
+                this.dettagliButton.setVisible(false);
         });
 
         this.tableView.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); //Enable User to Select Only 1 Row
@@ -132,8 +143,10 @@ public class MainGUI {
         this.tableView.getSelectionModel().addListSelectionListener( ev -> {
             if(this.tableView.getSelectedRow() >= 0){
                 this.modificaButton.setEnabled(true);
+                if(this.currentTable.equalsIgnoreCase("consegna")) this.dettagliButton.setEnabled(true);
                 if(Delete.isDeletable(this.currentTable)) this.eliminaButton.setEnabled(true);
             } else {
+                this.dettagliButton.setEnabled(false);
                 this.modificaButton.setEnabled(false);
                 this.eliminaButton.setEnabled(false);
             }
@@ -162,6 +175,7 @@ public class MainGUI {
                     tableManager.setTable(tab);
                     this.currentTable = tab;
                     this.cercaTabButton.setText("Reload");
+                    this.dettagliButton.setVisible(this.currentTable.equalsIgnoreCase("consegna"));
                 } catch (SQLException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -170,11 +184,11 @@ public class MainGUI {
     }
 
     /**
-     * This Method Sets Listeners for:
-     * - Modify Button
-     * - Delete Button
-     * in topPanel.
-     * Both Launch a JDialog if a Row in Open Table is Selected and the respective button is pressed.
+     * This Method Sets Listeners for: <br />
+     * - Modify Button -> Update Data <br />
+     * - Delete Button -> Delete Data <br />
+     * in topPanel. <br />
+     * Both Launch a JDialog if a Row in Open Table is Selected and the respective button is pressed. <br />
      * If no row is selected a warning dialog is shown instead.
      */
     private void setModifyAndDeleteButtonAction() {
@@ -182,6 +196,9 @@ public class MainGUI {
         /* - UPDATE Button Listener - */
         this.modificaButton.addActionListener(e ->{
             int selectedRow = this.tableView.getSelectedRow();
+
+            /*A Check Before Altering Table*/
+            if(!this.currentTable.equals(tableManager.getTableName())) throw new RuntimeException("Data is Not in SYNC!");
 
             if( selectedRow >= 0){
 
@@ -228,6 +245,46 @@ public class MainGUI {
     }
 
     /**
+     * This Method Sets Listener for: <br />
+     * - Dettagli Button <br />
+     * in topPanel. <br />
+     * This Launch a JDialog if a Row in "Consegna" Table is Selected and the respective button is pressed. <br />
+     * It shows details for that specific delivery. <br />
+     * If no row is selected, this button should be disabled. It is not visible if Current Table is NOT "Consegna".
+     */
+    private void setDettagliButtonListener(){
+        this.dettagliButton.addActionListener(e ->{
+            System.out.println("Dettagli Click");
+            int selectedRow = this.tableView.getSelectedRow();
+
+            /*A Check Before Altering Table*/
+            if(!this.currentTable.equalsIgnoreCase("consegna")) throw new RuntimeException("Data is Not in SYNC!");
+
+            if( selectedRow >= 0){
+                try {
+                    ContentWrap result = Operations.getDeliveryDetails(this.managerDB, this.tableManager.getRowContentPackageList(selectedRow));
+                    JTable detailsTable = new JTable();
+                    TableManager temp = new TableManager(detailsTable, null);
+                    temp.setTable(result);
+                    JPanel panel = new JPanel(new GridLayout(1,1));
+                    panel.setPreferredSize(new Dimension(1000, 50));
+
+                    panel.add(new JScrollPane(detailsTable));
+                    JOptionPane.showMessageDialog(this.getMainContainer(), panel);
+
+                } catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(this.getMainContainer(), "Error: \n" + ex.getMessage());
+                    throw new RuntimeException(ex);
+                }
+            } else {
+                JOptionPane.showMessageDialog(this.getMainContainer(), "No Row Selected in Table.",
+                        "No Row Selected", JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
+    }
+
+
+    /**
      * Set Listener for JComboBox tabelleComboBox:
      * If table is already selected set text of research button to 'Reload'
      * If selected table in ComboBox is different set button to 'Open'
@@ -243,7 +300,6 @@ public class MainGUI {
             }
         });
     }
-
 
 
     /* ---------- GRAPHIC COMPONENTS ------------ */
