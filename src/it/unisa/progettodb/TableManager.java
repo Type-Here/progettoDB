@@ -33,21 +33,6 @@ public class TableManager {
         this.typeList = new ArrayList<>();
     }
 
-    /**
-     * Main Function That Reprint Table.
-     * Select * From tableName
-     * Updates Column Names in List, Reformat the table columns and add data rows
-     * @param tableName Name of SQL Table to Draw
-     * @throws SQLException if Select Data Failed
-     */
-    public void setTable(String tableName) throws SQLException {
-        this.tableName = tableName;
-        try (ResultSet rSet = managerDB.executeSelect(new String[]{"*"}, this.tableName)) {
-            setTableColumnList(rSet);
-            formatTable();
-            setTableRows(rSet);
-        }
-    }
 
     /**
      * Reload The Current Working Table When Prompted
@@ -58,16 +43,10 @@ public class TableManager {
     }
 
     /**
-     * Gets a List of Strings with the Names of all Tables in DataBase.
-     * @return list of string with table names
-     * @throws SQLException if failed to retrieve info from db
+     * Get Data from a Row by index in form of List of ContentPackage (metadata + data).
+     * @param row index of the row in table.
+     * @return a List of ContentPackage containing all data of a single row.
      */
-    public List<String> getSchemasNames() throws SQLException{
-        List<String> tables;
-        tables = managerDB.getTablesName();
-        return tables;
-    }
-
     public List<ContentPackage> getRowContentPackageList(int row){
         List<ContentPackage> res = new ArrayList<>();
         for(int i = 0; i < tableColumnList.size(); i++){
@@ -86,68 +65,27 @@ public class TableManager {
         return tableName;
     }
 
-    /* PRIVATE METHODS */
 
     /**
-     * Create a new model (DefaultTableModel) and sets column names
+     * OverLoaded Method. Sets a New Model Table with all data from table. <br />
+     * A select will automatically queried. <br />
+     * It receives a ContentWrap containing all data and it doesn't directly interact with the DataBase but only  with tha manager instance
+     * @see it.unisa.progettodb.TableManager#setTable(ContentWrap, String)
+     * @param tableName String with the name of the Table in DB
+     * @throws SQLException if Select fails
      */
-    private void formatTable(){
-        model = newModel(); //Vedi giù
-
-        tableColumnList.forEach( n -> model.addColumn(n));
-        this.table.setModel(model);
-        model.fireTableDataChanged();
-    }
-
-    /**
-     * Updates this.tableColumnList with the Names of each column in specified table.
-     * A resultSet has to be taken before this method call.
-     * @param resultSet to get metadata from
-     * @throws SQLException if getMetaData fails
-     */
-    private void setTableColumnList(ResultSet resultSet) throws SQLException {
-        ResultSetMetaData metaData = resultSet.getMetaData();
-
-        int count = metaData.getColumnCount(); //number of column
-        String[] columnName = new String[count];
-
-        /* GetColumnLabel returns String with name of column of index i. It Starts From 1!*/
-        this.tableColumnList.clear();
-        this.typeList.clear();
-        for (int i = 0; i < count; i++)
-        {
-            columnName[i] = metaData.getColumnLabel(i + 1);
-            this.tableColumnList.add(columnName[i]);
-            this.typeList.add(JDBCType.valueOf(metaData.getColumnType(i + 1)));
-        }
+    public void setTable(String tableName) throws SQLException {
+        this.setTable(this.managerDB.executeSelect(new String[]{"*"}, tableName), tableName);
     }
 
 
     /**
-     * Populate Rows of Table. ResultSet is needed before calling this method.
-     * @param rSet ResultSet to Parse
-     * @throws SQLException if parsing fails
-     */
-    private void setTableRows(ResultSet rSet) throws SQLException {
-        while(rSet.next()){
-            List<String> row = new ArrayList<>();
-            for(int i = 1; i <= tableColumnList.size(); i++){ //Indice riga ResultSet Parte da 1
-                int type = rSet.getMetaData().getColumnType(i);
-                if( type == Types.BIT || type == Types.BOOLEAN ){
-                    row.add(rSet.getBoolean(i) ? "Si" : "No");
-                } else {
-                    row.add(rSet.getString(i));
-                }
-            }
-            model.addRow(row.toArray());
-        }
-    }
-
-    /**
-     * OverLoaded Method. Sets a New Model Table based on ContentWrap Data.
+     * OverLoaded Method. Sets a New Model Table based on ContentWrap Data passed as Parameter.
      * @param data ContentWrap where all data is loaded
+     * @param tableName String with the name of the Table in DB
      */
-    public void setTable(ContentWrap data){
+    public void setTable(ContentWrap data, String tableName){
+        this.tableName = tableName;
         DefaultTableModel model = newModel();
         this.tableColumnList.clear();
         this.typeList.clear();
@@ -164,6 +102,10 @@ public class TableManager {
         }
         this.table.setModel(model);
     }
+
+
+
+    /*-------------------- PRIVATE METHODS ----------------------*/
 
     /**
      * Create a new DefaultTableModel with Custom Listener
@@ -186,4 +128,92 @@ public class TableManager {
 
         return newModel;
     }
+
+
+
+
+    /*======================================= DEPRECATED =========================================*/
+    /**
+     * Main Function That Reprint Table.
+     * Select * From tableName
+     * Updates Column Names in List, Reformat the table columns and add data rows
+     * @deprecated New setTable doesn't use directly the resultSet. It's more secure and simplifies the job of the table management. <br />
+     * @see it.unisa.progettodb.TableManager#setTable(String)
+     * @param tableName Name of SQL Table to Draw
+     * @throws SQLException if Select Data Failed
+     */
+    @Deprecated()
+    private void setTableOLD(String tableName) throws SQLException {
+        this.tableName = tableName;
+        try (ResultSet rSet = managerDB.executeSelectRSet(new String[]{"*"}, this.tableName)) {
+            setTableColumnList(rSet);
+            formatTable();
+            setTableRows(rSet);
+        }
+    }
+
+
+    /**
+     * Create a new model (DefaultTableModel) and sets column names
+     * @deprecated used only in deprecated setTableOLD
+     * @see it.unisa.progettodb.TableManager#setTableRows(ResultSet)
+     */
+    @Deprecated
+    private void formatTable(){
+        model = newModel(); //Vedi giù
+        tableColumnList.forEach( n -> model.addColumn(n));
+        this.table.setModel(model);
+        model.fireTableDataChanged();
+    }
+
+    /**
+     * Updates this.tableColumnList with the Names of each column in specified table.
+     * A resultSet has to be taken before this method call.
+     * @param resultSet to get metadata from
+     * @throws SQLException if getMetaData fails
+     * @deprecated used only in deprecated setTableOLD
+     * @see it.unisa.progettodb.TableManager#setTableRows(ResultSet)
+     */
+    @Deprecated
+    private void setTableColumnList(ResultSet resultSet) throws SQLException {
+        ResultSetMetaData metaData = resultSet.getMetaData();
+
+        int count = metaData.getColumnCount(); //number of column
+        String[] columnName = new String[count];
+
+        /* GetColumnLabel returns String with name of column of index i. It Starts From 1!*/
+        this.tableColumnList.clear();
+        this.typeList.clear();
+        for (int i = 0; i < count; i++)
+        {
+            columnName[i] = metaData.getColumnLabel(i + 1);
+            this.tableColumnList.add(columnName[i]);
+            this.typeList.add(JDBCType.valueOf(metaData.getColumnType(i + 1)));
+        }
+    }
+
+
+    /**
+     * Populate Rows of Table. ResultSet is needed before calling this method.
+     * @param rSet ResultSet to Parse
+     * @throws SQLException if parsing fails
+     * @deprecated used only in deprecated setTableOLD
+     * @see it.unisa.progettodb.TableManager#setTableRows(ResultSet)
+     */
+    @Deprecated
+    private void setTableRows(ResultSet rSet) throws SQLException {
+        while(rSet.next()){
+            List<String> row = new ArrayList<>();
+            for(int i = 1; i <= tableColumnList.size(); i++){ //Indice riga ResultSet Parte da 1
+                int type = rSet.getMetaData().getColumnType(i);
+                if( type == Types.BIT || type == Types.BOOLEAN ){
+                    row.add(rSet.getBoolean(i) ? "Si" : "No");
+                } else {
+                    row.add(rSet.getString(i));
+                }
+            }
+            model.addRow(row.toArray());
+        }
+    }
+
 }
