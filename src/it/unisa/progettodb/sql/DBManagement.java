@@ -101,11 +101,11 @@ public class DBManagement {
      * @return List of JDBCType for each column
      * @throws SQLException if select and getMetaData fail
      */
-    public List<JDBCType> fetchDataType(String tableName) throws SQLException {
+    private List<JDBCType> fetchDataType(String tableName) throws SQLException {
         if(tableName == null) throw new NullTableException();
 
         List<JDBCType> dataType = new ArrayList<>();
-        try( ResultSet rSet = this.executeSelect(new String[]{"*"}, tableName) ){
+        try( ResultSet rSet = this.executeSelectRSet(new String[]{"*"}, tableName) ){
             for (int i = 1; i <= rSet.getMetaData().getColumnCount(); i++) {
                 int type = rSet.getMetaData().getColumnType(i);
                 dataType.add(JDBCType.valueOf(type));
@@ -123,13 +123,13 @@ public class DBManagement {
      * @return a ResultSetMetaData containing all metadata from Table.
      * @throws SQLException if select and getMetaData fail
      */
-    public ResultSetMetaData fetchMetaData(String tableName) throws SQLException {
+    private ResultSetMetaData fetchMetaData(String tableName) throws SQLException {
         if(tableName == null) throw new NullTableException();
 
         ResultSetMetaData metaData;
         CachedRowSet resultCached;
 
-        try( ResultSet rSet = this.executeSelect(new String[]{"*"}, tableName) ){
+        try( ResultSet rSet = this.executeSelectRSet(new String[]{"*"}, tableName) ){
             resultCached = RowSetProvider.newFactory().createCachedRowSet();
             resultCached.populate(rSet);
 
@@ -214,7 +214,7 @@ public class DBManagement {
      * @return ResultSet with result Data
      * @throws SQLException if SELECT fails
      */
-    public ResultSet executeSelect(String[] column, String tableName) throws SQLException {
+    public ResultSet executeSelectRSet(String[] column, String tableName) throws SQLException {
         StringBuilder build = new StringBuilder();
         Iterator<String> rowIt = Arrays.stream(column).iterator();
 
@@ -387,6 +387,16 @@ public class DBManagement {
 
     /* ===================== SELECT WITH CONDITIONS ======================= */
 
+    /**
+     * Executer Select from Table with name tableName. <br />
+     * Applies condition using WHERE clause. <br />
+     * Use Prepared Statements. <br />
+     * @param columns array of strings contaning the names of the column to be selected ({"*"} for all).
+     * @param tableName name of the Table to select FROM
+     * @param conditions to use for WHERE clause K:ColumnName E:Value to select.
+     * @return ContentWrap: Contains a List&lt;ContentPackage>&gt; with only metadata and a Hashmap with index and values. See ContenWrap for more info.
+     * @throws SQLException if SELECT fails.
+     */
     public ContentWrap executeSelect(String[] columns, String tableName, HashMap<String,Object> conditions) throws SQLException {
         StringBuilder build = new StringBuilder("SELECT ");
         if(columns.length == 0) throw new IllegalArgumentException("Columns Must Contain At Least 1 Value (i.e '*') ");
@@ -435,7 +445,37 @@ public class DBManagement {
         }
     }
 
+    /**
+     * SELECT without WHERE clause. Returns a ContentWrap instead of a ResultSet.
+     * @param columns Arrays with column names to select. ({"*"} for all).
+     * @param tableName Name of the Table
+     * @return ContentWrap with all data from chosen table.
+     * @throws SQLException if Select fails
+     */
+    public ContentWrap executeSelect(String[] columns, String tableName) throws SQLException {
+        StringBuilder build = new StringBuilder("SELECT ");
+        if(columns.length == 0) throw new IllegalArgumentException("Columns Must Contain At Least 1 Value (i.e '*') ");
 
+        /* Add Column to Select */
+        for(int i = 0; i < columns.length; i++){
+            if(i == 0) build.append(columns[i]);
+            else build.append(",").append(columns[i]);
+        }
+
+        build.append(" FROM ").append(tableName);
+
+        build.append(" ;");
+
+        PreparedStatement pStmt = connectDB.prepareStatement(build.toString());
+
+        //System.out.println(pStmt.toString());
+
+        try(ResultSet rSet = pStmt.executeQuery() ) {
+            this.sendToLog(pStmt.toString(), ActionEnum.Select);
+
+            return ContentWrap.getContentWrap(this.makeEmptyContentPackage(tableName), rSet);
+        }
+    }
 
     /* ================== LOGS METOHDS ==================== */
 
