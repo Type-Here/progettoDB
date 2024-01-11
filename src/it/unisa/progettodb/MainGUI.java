@@ -391,7 +391,8 @@ public class MainGUI {
         menuSelezione.add(filtraDati);
 
         filtraDati.addActionListener(e->{
-            FilterData data = new FilterData(this.tableManager);
+            FilterData data = new FilterData(this.mainContainer, this.tableManager);
+            data.createDialog();
         });
 
 
