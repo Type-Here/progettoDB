@@ -1,6 +1,5 @@
 package it.unisa.progettodb.datacontrol;
 
-
 import java.sql.JDBCType;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -43,7 +42,7 @@ public class ContentWrap {
      *                 Precision, isNullable).
      * @param dataSet ResultSet from a Query to parse data from
      * @return HashMap with K:Integer=Num Row of insertion from DB. V:LIst of Strings containing All Row Data
-     * @throws SQLException if retrieving data from resultset fails
+     * @throws SQLException if retrieving data from ResultSet fails
      */
     public static ContentWrap getContentWrap(List<ContentPackage> metaData, ResultSet dataSet) throws SQLException {
        HashMap<Integer, List<String>> rows = new LinkedHashMap<>();

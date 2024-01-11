@@ -69,7 +69,7 @@ public class TableManager {
     /**
      * OverLoaded Method. Sets a New Model Table with all data from table. <br />
      * A select will automatically queried. <br />
-     * It receives a ContentWrap containing all data and it doesn't directly interact with the DataBase but only  with tha manager instance
+     * It receives a ContentWrap containing all data, so it doesn't directly interact with the DataBase but only with the manager instance
      * @see it.unisa.progettodb.TableManager#setTable(ContentWrap, String)
      * @param tableName String with the name of the Table in DB
      * @throws SQLException if Select fails
