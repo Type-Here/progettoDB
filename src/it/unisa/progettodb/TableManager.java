@@ -19,6 +19,7 @@ public class TableManager {
     private final DBManagement managerDB;
     private DefaultTableModel model;
 
+    private ContentWrap wrapData;
 
 
     public TableManager(JTable table, DBManagement connectDB) {
@@ -65,6 +66,13 @@ public class TableManager {
         return tableName;
     }
 
+    /**
+     * Return Current Data in form of ContentWrap
+     * @return ContentWrap containing Data and MetaData
+     */
+    public ContentWrap getWrapData() {
+        return wrapData;
+    }
 
     /**
      * OverLoaded Method. Sets a New Model Table with all data from table. <br />
@@ -86,6 +94,7 @@ public class TableManager {
      */
     public void setTable(ContentWrap data, String tableName){
         this.tableName = tableName;
+        this.wrapData = data;
         DefaultTableModel model = newModel();
         this.tableColumnList.clear();
         this.typeList.clear();
