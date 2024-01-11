@@ -6,6 +6,7 @@ import it.unisa.progettodb.logs.LoggerManager;
 import it.unisa.progettodb.modify.Delete;
 import it.unisa.progettodb.modify.Insert;
 import it.unisa.progettodb.modify.Update;
+import it.unisa.progettodb.operations.FilterData;
 import it.unisa.progettodb.operations.Operations;
 import it.unisa.progettodb.operations.ReleaseWorker;
 import it.unisa.progettodb.sql.DBManagement;
@@ -116,7 +117,7 @@ public class MainGUI {
         /*KeyboardFocusManager is one of main class to manage focus in Java*/
         /*When table nor modify or delete button are on focus deselect row */
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addPropertyChangeListener("focusOwner", evt -> {
-            System.out.println(evt.getNewValue());
+            //System.out.println(evt.getNewValue());
             /* Property Change Event */
             Object c = evt.getNewValue();
             if(c == null) return;
@@ -172,11 +173,13 @@ public class MainGUI {
             if(selected != null) {
                 String tab = selected.toString();
                 try {
-                    tableManager.setTable(tab);
                     this.currentTable = tab;
+                    this.tableManager.setTable(this.currentTable);
                     this.cercaTabButton.setText("Reload");
+                    //If New Table is 'Consegna' set dettagli button true
                     this.dettagliButton.setVisible(this.currentTable.equalsIgnoreCase("consegna"));
                 } catch (SQLException ex) {
+                    JOptionPane.showMessageDialog(this.getMainContainer(), "Error: \n" + ex.getMessage());
                     throw new RuntimeException(ex);
                 }
             }
@@ -265,7 +268,7 @@ public class MainGUI {
                     ContentWrap result = Operations.getDeliveryDetails(this.managerDB, this.tableManager.getRowContentPackageList(selectedRow));
                     JTable detailsTable = new JTable();
                     TableManager temp = new TableManager(detailsTable, null);
-                    temp.setTable(result);
+                    temp.setTable(result, "cte");
                     JPanel panel = new JPanel(new GridLayout(1,1));
                     panel.setPreferredSize(new Dimension(1000, 50));
 
@@ -311,7 +314,8 @@ public class MainGUI {
     private void setTopPanel(){
         List<String> tables;
         try {
-            tables = tableManager.getSchemasNames();
+            //tables = tableManager.getSchemasNames();
+            tables = this.managerDB.getTablesName();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -327,6 +331,7 @@ public class MainGUI {
         menuBar.setPreferredSize(new Dimension(50,20));
         JMenu menuFile = new JMenu("File");
         JMenu menuOperazioni = new JMenu("Operazioni");
+        JMenu menuSelezione = new JMenu("Selezione");
         JMenu menuModifica = new JMenu("Modifica");
         JMenu menuAbout = new JMenu("About");
         menuBar.setFocusTraversalKeysEnabled(true);
@@ -381,6 +386,14 @@ public class MainGUI {
         });
         /*TODO*/
 
+        /* Selezione Menu */
+        JMenuItem filtraDati = new JMenuItem("Filtra...");
+        menuSelezione.add(filtraDati);
+
+        filtraDati.addActionListener(e->{
+            FilterData data = new FilterData(this.tableManager);
+        });
+
 
         /* Operazioni Menu */
         JMenuItem rimuoviDipendente = new JMenuItem("Liberate i Cani");
@@ -414,6 +427,7 @@ public class MainGUI {
 
         menuBar.add(menuFile);
         menuBar.add(menuModifica);
+        menuBar.add(menuSelezione);
         menuBar.add(menuOperazioni);
         menuBar.add(menuAbout);
 
