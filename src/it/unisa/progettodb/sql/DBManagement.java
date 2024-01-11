@@ -17,7 +17,7 @@ public class DBManagement {
     private ResultSet rSet;
     private LoggerManager loggerManager;
 
-    public enum ActionEnum {Select, Insert, Delete, Update, GetSchemas, Connected, FetchDataType, FetchMetaData}
+    public enum ActionEnum {Select, Insert, Delete, Update, GetSchemas, Connected, FetchDataType, FetchMetaData, Info}
 
     /* ===== CONSTRUCTORS ===== */
 
@@ -390,6 +390,9 @@ public class DBManagement {
     public ContentWrap executeSelect(String[] columns, String tableName, HashMap<String,Object> conditions) throws SQLException {
         StringBuilder build = new StringBuilder("SELECT ");
         if(columns.length == 0) throw new IllegalArgumentException("Columns Must Contain At Least 1 Value (i.e '*') ");
+        if(conditions.isEmpty()) {
+            this.loggerManager.log("No Conditions Applied. Maybe use simple executeSelect", ActionEnum.Info);
+        }
 
         /* Add Column to Select */
         for(int i = 0; i < columns.length; i++){
@@ -397,7 +400,9 @@ public class DBManagement {
             else build.append(",").append(columns[i]);
         }
 
-        build.append(" FROM ").append(tableName).append(" WHERE ");
+        build.append(" FROM ").append(tableName);
+
+        if(!conditions.isEmpty()) build.append(" WHERE ");
 
         /* Add Conditions ColumnName */
         boolean first = true;
