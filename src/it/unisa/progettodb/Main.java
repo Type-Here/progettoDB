@@ -10,12 +10,12 @@ public class Main {
         MainGUI GUI = new MainGUI();
 
         JFrame mainFrame = new JFrame("ATI Management System");
-        mainFrame.setLocationRelativeTo(null);
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainFrame.setMinimumSize(new Dimension(500, 400));
         mainFrame.setSize(900,800);
         mainFrame.add(GUI.getMainContainer());
         mainFrame.setJMenuBar(GUI.getJMenuBar());
+        mainFrame.setLocationRelativeTo(null);
         mainFrame.setVisible(true);
 
         mainFrame.addWindowListener(new WindowAdapter(){
