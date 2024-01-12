@@ -38,6 +38,7 @@ public class MainGUI {
     private final LoggerManager loggerManager;
     private String currentTable;
     private FilterData filter;
+    private MenuAction menuAction;
 
     public MainGUI(){
         loggerManager = new LoggerManager();
@@ -282,7 +283,7 @@ public class MainGUI {
             if( selectedRow >= 0){
                 try {
                     ContentWrap result = Operations.getDeliveryDetails(this.managerDB, this.tableManager.getRowContentPackageList(selectedRow));
-                    createTableDialog(result, "cte", 1000, 50);
+                    this.menuAction.createTableDialog(result, "cte", 1000, 50, "Dettagli Consegna");
 
                 } catch (SQLException ex) {
                     JOptionPane.showMessageDialog(this.getMainContainer(), "Error: \n" + ex.getMessage());
@@ -336,6 +337,8 @@ public class MainGUI {
      * @return JMenuBar
      */
     private JMenuBar addMainMenu(){
+        this.menuAction = new MenuAction(this.managerDB, this.getMainContainer());
+
         JMenuBar menuBar = new JMenuBar();
         menuBar.setPreferredSize(new Dimension(50,20));
         JMenu menuFile = new JMenu("File");
@@ -416,10 +419,19 @@ public class MainGUI {
 
         /* Operazioni Menu - batchMenu */
         JMenuItem sumStipendi = new JMenuItem("Somma Stipendi");
+        JMenuItem sumWeight = new JMenuItem("Somma Pesi");
+        JMenuItem countDeliveries = new JMenuItem("Consegne > 2K");
+        JMenuItem vehicleMaxDeliveries = new JMenuItem("Mezzo con più Consegne");
         batchMenu.add(sumStipendi);
+        batchMenu.add(sumWeight);
+        batchMenu.add(countDeliveries);
+        batchMenu.add(vehicleMaxDeliveries);
 
-        //sumStipendi Listener
-        sumStipendi.addActionListener( e -> openSumStipendiDialog());
+        //Batch Listeners
+        sumStipendi.addActionListener( e -> this.menuAction.openSumStipendiDialog());
+        sumWeight.addActionListener(e -> this.menuAction.openSumWeightDialog());
+        countDeliveries.addActionListener(e -> this.menuAction.openCountDeliveriesDialog());
+        vehicleMaxDeliveries.addActionListener(e -> this.menuAction.openVehicleMaxDeliveriesDialog());
 
         //Rimuovi Dipendente Listener
         rimuoviDipendente.addActionListener(e ->{
@@ -454,38 +466,6 @@ public class MainGUI {
         menuBar.add(menuAbout);
 
         return menuBar;
-    }
-
-    /**
-     * Action for JMenuItem sumStipendi
-     */
-    private void openSumStipendiDialog(){
-        try {
-            ContentWrap result = Operations.getSumSalaries(this.managerDB);
-            createTableDialog(result, "cte_stipendi", 300, 80);
-
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this.getMainContainer(), "Error: \n" + ex.getMessage());
-            throw new RuntimeException(ex);
-        }
-    }
-
-    /**
-     * Create a Dialog Panel containing a new temporary Table with all Data in a ContentWrap.
-     * @param result ContentWrap containing all Data and MetaData to Display
-     * @param tempTableName name of the Temporary Table
-     * @param width Preferred Width for Main JPanel
-     * @param height  Preferred Height for Main JPanel
-     */
-    private void createTableDialog(ContentWrap result, String tempTableName, int width, int height) {
-        JTable detailsTable = new JTable();
-        TableManager temp = new TableManager(detailsTable, null);
-        temp.setTable(result, tempTableName);
-        JPanel panel = new JPanel(new GridLayout(1, 1));
-        panel.setPreferredSize(new Dimension(width, height));
-
-        panel.add(new JScrollPane(detailsTable));
-        JOptionPane.showMessageDialog(this.getMainContainer(), panel);
     }
 
 

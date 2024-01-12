@@ -8,8 +8,9 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 
-/* THIS CLASS IS HIGHLY DATABASE SPECIFIC */
-@SuppressWarnings("typo")
+/* =========== THIS CLASS IS HIGHLY DATABASE SPECIFIC =========== */
+
+@SuppressWarnings("SpellCheckingInspection")
 public class Operations {
 
     /* =================================== INTERACTIVE ================================== */
@@ -54,4 +55,31 @@ public class Operations {
                 "GROUP BY citta, zona, m.nome;";
         return managerDB.execute(query);
     }
+
+    /**
+     * Op.17 <br />
+     * Conta Consegne per CD aventi un numero di consegne maggiore di 2000. B
+     */
+    public static ContentWrap getCountDeliveriesGreter2K(DBManagement managerDB) throws SQLException {
+        String query = "SELECT citta, zona, count(*) as NumConsegne " +
+        "FROM consegna " +
+        "GROUP BY citta, zona " +
+        "HAVING NumConsegne > 2000;";
+        return managerDB.execute(query);
+    }
+
+    /**
+     * Op.18 <br />
+     * Mezzo il cui numero di consegne è il più alto. B
+     */
+    public static ContentWrap getVehicleMaxDeliveries(DBManagement managerDB) throws SQLException {
+        String query = "WITH ContaConsegne AS( SELECT targa, COUNT(*) AS NumConsegne FROM consegna GROUP BY targa) " +
+                        "SELECT * " +
+                        "FROM ContaConsegne JOIN mezzo USING(targa) " +
+                        "WHERE numconsegne = (SELECT MAX(numconsegne) as max FROM ContaConsegne);";
+        return managerDB.execute(query);
+    }
+
+
+
 }
