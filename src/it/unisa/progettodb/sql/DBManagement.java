@@ -17,7 +17,7 @@ public class DBManagement {
     private ResultSet rSet;
     private LoggerManager loggerManager;
 
-    public enum ActionEnum {Select, Insert, Delete, Update, GetSchemas, Connected, FetchDataType, FetchMetaData, Info}
+    public enum ActionEnum {Select, Insert, Delete, Update, GetSchemas, Connected, FetchDataType, FetchMetaData, Info, Query}
 
     /* ===== CONSTRUCTORS ===== */
 
@@ -441,7 +441,7 @@ public class DBManagement {
         try(ResultSet rSet = pStmt.executeQuery() ) {
             this.sendToLog("with Conditions: " + pStmt, ActionEnum.Select);
 
-            return ContentWrap.getContentWrap(this.makeEmptyContentPackage(tableName), rSet);
+            return ContentWrap.getContentWrap(rSet);
         }
     }
 
@@ -473,9 +473,27 @@ public class DBManagement {
         try(ResultSet rSet = pStmt.executeQuery() ) {
             this.sendToLog(pStmt.toString(), ActionEnum.Select);
 
-            return ContentWrap.getContentWrap(this.makeEmptyContentPackage(tableName), rSet);
+            return ContentWrap.getContentWrap(rSet);
         }
     }
+
+    /**
+     * Package Only <br />
+     * Execute a Generic Statement Passed String Query (all query already prepared). <br />
+     * @param query String with complete Query
+     * @return ContentWrap with Result Data and MetaData
+     * @throws SQLException if Query Fails
+     */
+    ContentWrap execute(String query) throws SQLException {
+        try(PreparedStatement pStmt = connectDB.prepareStatement(query)){
+            try(ResultSet rSet = pStmt.executeQuery()){
+                this.sendToLog(query, ActionEnum.Query);
+                return ContentWrap.getContentWrap(rSet);
+            }
+        }
+    }
+
+
 
     /* ================== LOGS METOHDS ==================== */
 

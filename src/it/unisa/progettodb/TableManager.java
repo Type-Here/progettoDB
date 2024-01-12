@@ -51,6 +51,7 @@ public class TableManager {
         for(int i = 0; i < tableColumnList.size(); i++){
             //String data = this.table.getModel().getValueAt(row, i).toString();
             String data = this.table.getValueAt(row, i).toString();
+            //Get Data from Table and not Model so remains in sync with the eventual Reorder
 
             res.add(new ContentPackage(i +1, data, tableColumnList.get(i), this.typeList.get(i)) );
         }

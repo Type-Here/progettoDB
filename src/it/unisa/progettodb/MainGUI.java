@@ -6,9 +6,9 @@ import it.unisa.progettodb.logs.LoggerManager;
 import it.unisa.progettodb.modify.Delete;
 import it.unisa.progettodb.modify.Insert;
 import it.unisa.progettodb.modify.Update;
-import it.unisa.progettodb.operations.FilterData;
-import it.unisa.progettodb.operations.Operations;
-import it.unisa.progettodb.operations.ReleaseWorker;
+import it.unisa.progettodb.sql.operations.FilterData;
+import it.unisa.progettodb.sql.Operations;
+import it.unisa.progettodb.sql.operations.ReleaseWorker;
 import it.unisa.progettodb.sql.DBManagement;
 
 import javax.swing.*;
@@ -273,7 +273,7 @@ public class MainGUI {
      */
     private void setDettagliButtonListener(){
         this.dettagliButton.addActionListener(e ->{
-            System.out.println("Dettagli Click");
+
             int selectedRow = this.tableView.getSelectedRow();
 
             /*A Check Before Altering Table*/
@@ -282,14 +282,7 @@ public class MainGUI {
             if( selectedRow >= 0){
                 try {
                     ContentWrap result = Operations.getDeliveryDetails(this.managerDB, this.tableManager.getRowContentPackageList(selectedRow));
-                    JTable detailsTable = new JTable();
-                    TableManager temp = new TableManager(detailsTable, null);
-                    temp.setTable(result, "cte");
-                    JPanel panel = new JPanel(new GridLayout(1,1));
-                    panel.setPreferredSize(new Dimension(1000, 50));
-
-                    panel.add(new JScrollPane(detailsTable));
-                    JOptionPane.showMessageDialog(this.getMainContainer(), panel);
+                    createTableDialog(result, "cte", 1000, 50);
 
                 } catch (SQLException ex) {
                     JOptionPane.showMessageDialog(this.getMainContainer(), "Error: \n" + ex.getMessage());
@@ -417,9 +410,18 @@ public class MainGUI {
 
         /* Operazioni Menu */
         JMenuItem rimuoviDipendente = new JMenuItem("Liberate i Cani");
+        JMenu batchMenu = new JMenu("Batch");
         menuOperazioni.add(rimuoviDipendente);
+        menuOperazioni.add(batchMenu);
 
+        /* Operazioni Menu - batchMenu */
+        JMenuItem sumStipendi = new JMenuItem("Somma Stipendi");
+        batchMenu.add(sumStipendi);
 
+        //sumStipendi Listener
+        sumStipendi.addActionListener( e -> openSumStipendiDialog());
+
+        //Rimuovi Dipendente Listener
         rimuoviDipendente.addActionListener(e ->{
             ReleaseWorker releaseWorker = new ReleaseWorker(this.getMainContainer(), this.managerDB);
             if(releaseWorker.createDialog()){
@@ -452,6 +454,38 @@ public class MainGUI {
         menuBar.add(menuAbout);
 
         return menuBar;
+    }
+
+    /**
+     * Action for JMenuItem sumStipendi
+     */
+    private void openSumStipendiDialog(){
+        try {
+            ContentWrap result = Operations.getSumSalaries(this.managerDB);
+            createTableDialog(result, "cte_stipendi", 300, 80);
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this.getMainContainer(), "Error: \n" + ex.getMessage());
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * Create a Dialog Panel containing a new temporary Table with all Data in a ContentWrap.
+     * @param result ContentWrap containing all Data and MetaData to Display
+     * @param tempTableName name of the Temporary Table
+     * @param width Preferred Width for Main JPanel
+     * @param height  Preferred Height for Main JPanel
+     */
+    private void createTableDialog(ContentWrap result, String tempTableName, int width, int height) {
+        JTable detailsTable = new JTable();
+        TableManager temp = new TableManager(detailsTable, null);
+        temp.setTable(result, tempTableName);
+        JPanel panel = new JPanel(new GridLayout(1, 1));
+        panel.setPreferredSize(new Dimension(width, height));
+
+        panel.add(new JScrollPane(detailsTable));
+        JOptionPane.showMessageDialog(this.getMainContainer(), panel);
     }
 
 

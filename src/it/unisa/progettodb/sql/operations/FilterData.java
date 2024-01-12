@@ -1,8 +1,7 @@
-package it.unisa.progettodb.operations;
+package it.unisa.progettodb.sql.operations;
 
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.components.DatePickerSettings;
-import it.unisa.progettodb.TableManager;
 import it.unisa.progettodb.datacontrol.ContentPackage;
 import it.unisa.progettodb.datacontrol.ContentWrap;
 import it.unisa.progettodb.datacontrol.CustomDocFilter;
@@ -42,7 +41,7 @@ public class FilterData {
     /**
      * Launch MainMethod createDialog with default value false
      * @return Filtered ContentWrap (Does Not update the Table)
-     * @see it.unisa.progettodb.operations.FilterData#createDialog(boolean)
+     * @see FilterData#createDialog(boolean)
      */
     public ContentWrap createDialog(){
         return createDialog(false);
