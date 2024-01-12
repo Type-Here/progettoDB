@@ -37,6 +37,7 @@ public class MainGUI {
     private final TextAreaManager textAreaManager;
     private final LoggerManager loggerManager;
     private String currentTable;
+    private FilterData filter;
 
     public MainGUI(){
         loggerManager = new LoggerManager();
@@ -47,9 +48,8 @@ public class MainGUI {
         if(this.managerDB == null) throw new RuntimeException("Unable to Set managerDB");
 
 
-        if(managerDB.isConnected()){
+        if(! managerDB.isConnected()) throw new RuntimeException("Unable to Connect");
            // JOptionPane.showMessageDialog(this.getMainContainer(), "Connected");
-        } else throw new RuntimeException("Unable to Connect");
 
         menuBar = addMainMenu();
 
@@ -130,11 +130,22 @@ public class MainGUI {
 
         /* Disable Button When Table is Reloaded or Changed */
         this.tableView.addPropertyChangeListener(e->{
+            if(this.currentTable != null){
+                this.menuBar.getMenu(2).getItem(0).setEnabled(true); //Enable Select -> Filter if a Table is Selected
+                if(!this.currentTable.equalsIgnoreCase("consegna")){
+                    this.dettagliButton.setVisible(false);
+                }
+            } else {
+                this.dettagliButton.setVisible(false);
+                this.menuBar.getMenu(2).getItem(0).setEnabled(false); //Disable Select -> Filter if No Table is Selected
+            }
+
+            //In every Case Do:
             this.modificaButton.setEnabled(false);
             this.eliminaButton.setEnabled(false);
             this.dettagliButton.setEnabled(false);
-            if(this.currentTable == null || !this.currentTable.equalsIgnoreCase("consegna"))
-                this.dettagliButton.setVisible(false);
+
+
         });
 
         this.tableView.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); //Enable User to Select Only 1 Row
@@ -389,10 +400,13 @@ public class MainGUI {
         /* Selezione Menu */
         JMenuItem filtraDati = new JMenuItem("Filtra...");
         menuSelezione.add(filtraDati);
-
+        filtraDati.setEnabled(false); //On creation no table is selected so disable item
         filtraDati.addActionListener(e->{
-            FilterData data = new FilterData(this.mainContainer, this.tableManager);
-            data.createDialog();
+            if(this.filter == null)
+                this.filter = new FilterData(this.mainContainer, this.tableManager.getWrapData());
+            ContentWrap filteredWrap = this.filter.createDialog(this.filter.isFiltered()); //NB return a ContentWrap not a boolean unlike createDialog in some other classes
+            if(filteredWrap != null) this.tableManager.setTable(filteredWrap,this.currentTable); //null is not always an error, also canceled op by user
+            this.filter.setFiltered(true);
         });
 
 

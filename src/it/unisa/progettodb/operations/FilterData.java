@@ -8,6 +8,8 @@ import it.unisa.progettodb.datacontrol.ContentWrap;
 import it.unisa.progettodb.datacontrol.CustomDocFilter;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.PlainDocument;
 import java.awt.*;
 import java.sql.JDBCType;
@@ -17,44 +19,102 @@ import java.util.*;
 import java.util.List;
 
 public class FilterData {
-    private final TableManager tableManager;
     private final Component owner;
     private JPanel filterPanel;
-    private final ContentWrap contentWrap;
+    private ContentWrap contentWrap;
+    private final ContentWrap original;
+    private HashMap<String, List<JComponent>> userInputFields;
+    private boolean isFiltered;
+    private static boolean isChanged; //If any field changes its value reload original ContentWrap to re-filter data
 
-    public FilterData(Component owner, TableManager tableManager) {
-        this.tableManager = tableManager;
+    public FilterData(Component owner, ContentWrap contentWrap) {
         this.owner = owner;
-        this.contentWrap = tableManager.getWrapData();
+        this.contentWrap = contentWrap;
+        try {
+            this.original = (ContentWrap) contentWrap.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+        this.filterPanel = null;
+        isChanged = false;
     }
 
-    public boolean createDialog(){
-        HashMap<String, List<JComponent>> userInputFields = createUserInputPanel(this.contentWrap.getMetaData());
+    /**
+     * Launch MainMethod createDialog with default value false
+     * @return Filtered ContentWrap (Does Not update the Table)
+     * @see it.unisa.progettodb.operations.FilterData#createDialog(boolean)
+     */
+    public ContentWrap createDialog(){
+        return createDialog(false);
+    }
+
+    /**
+     * Getter for isFiltered variable.
+     * @return If filter is active returns true
+     */
+    public boolean isFiltered() {
+        return isFiltered;
+    }
+
+    /**
+     * Setter for isFiltered Value
+     * @param filtered true if table is successfully filtered
+     */
+    public void setFiltered(boolean filtered) {
+        isFiltered = filtered;
+    }
+
+    /**
+     * Main Method: <br />
+     * Launch a user panel to collect user input. <br />
+     * Launch Filter Data using input collected. <br />
+     * Return Filtered ContentWrap
+     * @param isFilterActive boolean is true if table is already filtered, reuse old panel
+     * @return Filtered ContentWrap (Does Not update the Table). If user cancel option or some error occurred it returns null
+     */
+    public ContentWrap createDialog(boolean isFilterActive){
+        if(!isFilterActive || this.filterPanel == null) //check on null if method with true is called but new Filter Object is created instead
+            this.userInputFields = createUserInputPanel(this.contentWrap.getMetaData());
+
         if( JOptionPane.showConfirmDialog(this.owner, this.filterPanel,
                         "Filtra Dati", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION ){
             filterData(userInputFields);
-            this.tableManager.setTable(this.contentWrap, this.tableManager.getTableName());
-            return true;
+           // this.tableManager.setTable(this.contentWrap, this.tableManager.getTableName());
+            return this.contentWrap;
         }
-        return false;
+        return null;
     }
 
+    /**
+     * Effectively filter ContentWrap Data by user input constraints. <br />
+     * If FilterData is reused it keeps track of precedent filter. <br />
+     * If a filtered field is changed the original ContentWrap is cloned to filter new user input data. <br />
+     * @param userInputFields list of jComponents containing JTextFields or DatePicker to choose from
+     */
     private void filterData(HashMap<String, List<JComponent>> userInputFields) {
+        if(isChanged){ //If any field changes its value reload original ContentWrap to re-filter data
+            try {
+                this.contentWrap = (ContentWrap) original.clone();
+            } catch (CloneNotSupportedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        //Get Values of Text and DatePicker fields set By User
         int i = -1;
         for (Map.Entry<String, List<JComponent>> e : userInputFields.entrySet()) {
             i++;
             String column = e.getKey();
             if (!column.equalsIgnoreCase(this.contentWrap.getMetaData().get(i).getColumnName()))
-                throw new RuntimeException("FilterData has misaligned columns ");
+                throw new RuntimeException("FilterData has misaligned columns");
 
-            /* If Text get it and filter if not empty */
+            /* If Text is set, get it and filter */
             if (e.getValue().get(0) instanceof JTextField t) {
                 String userInput = t.getText();
-                System.out.println("Input: " + userInput);
+
                 if (userInput == null || userInput.isEmpty()) continue;
                 removeDataPerColumnText(i, userInput);
 
-                /* If Date and 1 of 2 DatePickerField is not empty Filter */
+                /* If Date and at least 1 of the 2 DatePickerField is not empty Filter */
             } else if (e.getValue().get(0) instanceof DatePicker dFrom) {
                 DatePicker dTo = (DatePicker) e.getValue().get(1);
                 if (dFrom.getDate() == null && dTo.getDate() == null) continue;
@@ -63,6 +123,13 @@ public class FilterData {
         }
     }
 
+    /**
+     * Search into each row of data if #column = index has a date outside the range and removes that row. <br />
+     * If a date is null no upper/lower limit is set.
+     * @param index of the column to filter
+     * @param dFrom Starting date
+     * @param dTo Up to Date
+     */
     private void removeDataPerColumnDate(int index, DatePicker dFrom, DatePicker dTo) {
         Iterator<Map.Entry<Integer, List<String>>> it = this.contentWrap.getRows().entrySet().iterator();
         while(it.hasNext()){
@@ -73,19 +140,26 @@ public class FilterData {
         }
     }
 
-
+    /**
+     * Remove a row in data if index column does not 'contain' input substring (partial result are accepted)
+     * @param index of the column to filter
+     * @param userInput substring for compare
+     */
     private void removeDataPerColumnText(int index, String userInput){
         this.contentWrap.getRows().entrySet().removeIf(e -> !e.getValue().get(index).toLowerCase().contains(userInput.toLowerCase()));
     }
 
     /**
      * Create a Panel for User to Insert a Search pattern for each column of the table. <br />
+     * It sets the main panel internally and returns a hashmap containing only user interactive fields for each column. <br />
      * If column is a date shows 2 date picker (From - To). <br />
      * @param contentPackageList for metadata of each column
      * @return HashMap K:ColumnName - E:List of JComponent(s) to get Data after eventual User Confirm
      */
     private HashMap<String, List<JComponent>> createUserInputPanel(List<ContentPackage> contentPackageList){
+
         JPanel mainDialogPanel = new JPanel(new GridLayout(contentPackageList.size(), 2));
+        mainDialogPanel.setFocusTraversalKeysEnabled(true);
         HashMap<String,List<JComponent>> fieldsPerColumn = new LinkedHashMap<>();
 
         for(ContentPackage content: contentPackageList) {
@@ -143,6 +217,15 @@ public class FilterData {
         textField.setInputVerifier(CustomDocFilter.getInputVerifierFixedSize(CustomDocFilter.NOFIXEDSIZE));
 
         textField.setPreferredSize(new Dimension(200, 20));
+
+        textField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {isChanged = true;}
+            @Override
+            public void removeUpdate(DocumentEvent e) {isChanged = true;}
+            @Override
+            public void changedUpdate(DocumentEvent e) {isChanged = true;}
+        });
         return textField;
     }
 
@@ -170,6 +253,7 @@ public class FilterData {
             /*Limit To Date based on chosen From*/
             LocalDate toDate = datePickerTo.getDate();
             if(toDate != null && toDate.isBefore(d)) datePickerTo.setDate(null);
+            isChanged = true;
         });
 
         datePickerTo.addDateChangeListener(e ->{
@@ -179,6 +263,7 @@ public class FilterData {
             /*Limit From Date based on chosen TO*/
             LocalDate FromDate = datePickerFrom.getDate();
             if(FromDate != null && FromDate.isAfter(d)) datePickerFrom.setDate(null);
+            isChanged = true;
         });
 
         res[0] = datePickerFrom;

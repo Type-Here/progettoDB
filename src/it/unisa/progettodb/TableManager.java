@@ -18,9 +18,7 @@ public class TableManager {
     private final JTable table;
     private final DBManagement managerDB;
     private DefaultTableModel model;
-
     private ContentWrap wrapData;
-
 
     public TableManager(JTable table, DBManagement connectDB) {
         this(null, new ArrayList<>(), table, connectDB);
