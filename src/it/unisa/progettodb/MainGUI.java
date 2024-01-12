@@ -117,6 +117,7 @@ public class MainGUI {
         //Disable user reordering columns with drag and drop
         this.tableView.getTableHeader().setReorderingAllowed(false);
         this.tableView.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); //Enable User to Select Only 1 Row
+        this.tableView.setAutoCreateRowSorter(true);
 
         /*KeyboardFocusManager is one of main class to manage focus in Java*/
         /*When table nor modify or delete button are on focus deselect row */
@@ -183,6 +184,7 @@ public class MainGUI {
      */
     private void cercaTabButtonAction(){
         cercaTabButton.addActionListener( e -> {
+            this.filter = null; //Reset Filter!
             Object selected = tabelleComboBox.getSelectedItem();
             if(selected != null) {
                 String tab = selected.toString();

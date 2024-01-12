@@ -49,7 +49,8 @@ public class TableManager {
     public List<ContentPackage> getRowContentPackageList(int row){
         List<ContentPackage> res = new ArrayList<>();
         for(int i = 0; i < tableColumnList.size(); i++){
-            String data = this.table.getModel().getValueAt(row, i).toString();
+            //String data = this.table.getModel().getValueAt(row, i).toString();
+            String data = this.table.getValueAt(row, i).toString();
 
             res.add(new ContentPackage(i +1, data, tableColumnList.get(i), this.typeList.get(i)) );
         }
