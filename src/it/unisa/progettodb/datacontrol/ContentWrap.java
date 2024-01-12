@@ -2,6 +2,7 @@ package it.unisa.progettodb.datacontrol;
 
 import java.sql.JDBCType;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -56,6 +57,30 @@ public class ContentWrap implements Cloneable{
         rows.put(rowLine++, row);
         }
         return new ContentWrap(metaData, rows);
+    }
+
+    /**
+     * Retrieve Automatically all MetaData for each Row. <br />
+     * Method to parse ResultData to new ContentWrap Package (Standard Used in this Program).
+     * @param dataSet ResultSet from a Query to parse Data and MetaData from
+     * @return HashMap with K:Integer=Num Row of insertion from DB. V:LIst of Strings containing All Row Data
+     * @throws SQLException if retrieving data from ResultSet fails
+     * @see it.unisa.progettodb.datacontrol.ContentWrap#getContentWrap(List, ResultSet)
+     */
+    public static ContentWrap getContentWrap(ResultSet dataSet) throws SQLException {
+        List<ContentPackage> metaData = new ArrayList<>();
+        ResultSetMetaData rSetMeta = dataSet.getMetaData();
+        System.out.println("Meta: " + rSetMeta.getColumnCount());
+        try(dataSet){
+            for(int i = 1; i <= rSetMeta.getColumnCount(); i++){
+                ContentPackage c = new ContentPackage(i, null, rSetMeta.getColumnName(i),
+                        JDBCType.valueOf(rSetMeta.getColumnType(i)));
+                c.setPrecision(rSetMeta.getPrecision(i));
+                if(rSetMeta.isNullable(i) == ResultSetMetaData.columnNullable) c.setNullable(true);
+                metaData.add(c);
+            }
+            return getContentWrap(metaData, dataSet);
+        }
     }
 
     /**
