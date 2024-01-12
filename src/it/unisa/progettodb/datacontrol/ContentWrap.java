@@ -3,15 +3,12 @@ package it.unisa.progettodb.datacontrol;
 import java.sql.JDBCType;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * Wrapper For Containing Multiple Rows of Data
  */
-public class ContentWrap {
+public class ContentWrap implements Cloneable{
     private final List<ContentPackage> metaData;
     private final HashMap<Integer,List<String>> rows;
 
@@ -60,4 +57,30 @@ public class ContentWrap {
         }
         return new ContentWrap(metaData, rows);
     }
+
+    /**
+     * Overrides Object.clone(). <br />
+     * Shallow Copy of MetaData (list of ContentPackages). <br />
+     * Deep copy of HashMap of Data to survive filtering in FilterData.
+     * @return a ContentWrap clone
+     * @throws CloneNotSupportedException if not cloneable
+     */
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        /*Used to keep original data from filter so no data is actually modified only removed from hashmap when filtering*/
+        //Shallow Copy of MetaData
+        //Deep Copy of Data
+        ContentWrap or = (ContentWrap) super.clone();
+        HashMap<Integer, List<String>> original = or.getRows();
+        {
+            HashMap<Integer, List<String>> copy = new HashMap<>();
+            for (Map.Entry<Integer, List<String>> entry : original.entrySet())
+            {
+                copy.put(entry.getKey(),
+                        new ArrayList<>(entry.getValue()));
+            }
+            return new ContentWrap(or.getMetaData(), copy);
+        }
+    }
+
 }
