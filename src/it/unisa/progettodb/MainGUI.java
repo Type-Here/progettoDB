@@ -60,8 +60,8 @@ public class MainGUI {
         /*Sets tabelleComboBox with Table Names to be Selected for View*/
         setTopPanel();
 
-        /*Set Appropriate Listeners to JTable*/
-        this.setTableListeners();
+        /*Set Appropriate Listeners to JTable and Settings*/
+        this.setTableSettingsAndListeners();
 
         /*Open Button Listener*/
         cercaTabButtonAction();
@@ -108,12 +108,16 @@ public class MainGUI {
     /* -------- LISTENERS --------- */
 
     /**
-     * Set Table Listeners.
+     * Set Table Listeners adn Settings.
      * Focus Listener with KeyboardFocusManager to Remove Selection and Disable buttons when focus is lost.
      * Table Property Change to Disable Buttons on Table Reload.
      * Table Selection Listener to Enable / Disable Buttons Appropriately.
      */
-    private void setTableListeners(){
+    private void setTableSettingsAndListeners(){
+        //Disable user reordering columns with drag and drop
+        this.tableView.getTableHeader().setReorderingAllowed(false);
+        this.tableView.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); //Enable User to Select Only 1 Row
+
         /*KeyboardFocusManager is one of main class to manage focus in Java*/
         /*When table nor modify or delete button are on focus deselect row */
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addPropertyChangeListener("focusOwner", evt -> {
@@ -148,7 +152,6 @@ public class MainGUI {
 
         });
 
-        this.tableView.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); //Enable User to Select Only 1 Row
 
         /*THIS CALL A DATABASE SPECIFIC CONTROL ON WHICH TABLE USER CAN DELETE*/
         /*When Selected Row in Table Enable Modify Button and Delete Button (only on appropriate tables) */
