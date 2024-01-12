@@ -2,10 +2,8 @@ package it.unisa.progettodb.sql;
 
 import it.unisa.progettodb.datacontrol.ContentPackage;
 import it.unisa.progettodb.datacontrol.ContentWrap;
-import it.unisa.progettodb.sql.DBManagement;
 
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
 
 /* =========== THIS CLASS IS HIGHLY DATABASE SPECIFIC =========== */

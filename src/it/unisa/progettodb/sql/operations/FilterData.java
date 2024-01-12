@@ -164,7 +164,6 @@ public class FilterData {
         for(ContentPackage content: contentPackageList) {
             List<JComponent> fields = new ArrayList<>();
 
-            JDBCType typeSQL = content.getType();
             JPanel rowPanel = new JPanel();
             JLabel label = new JLabel(' ' + content.getColumnName() + ' ' + ':');
             rowPanel.add(label);
@@ -187,7 +186,7 @@ public class FilterData {
                 continue;
 
             } else {
-                JTextField textField = getjTextField(content, typeSQL);
+                JTextField textField = getjTextField();
                 PlainDocument doc = (PlainDocument) textField.getDocument();
                 doc.setDocumentFilter(new CustomDocFilter(content.getType(), content.getPrecision()));
 
@@ -204,12 +203,10 @@ public class FilterData {
     }
 
     /**
-     * Create a New JTextField (formatted) with InputVerifier based on content and typeSQL
-     * @param content metadata for Precision (in ContentPackage)
-     * @param typeSQL metadata for InputVerifier and Limit Input
+     * Create a New JTextField (formatted) with InputVerifier with no fixed size (no minimum)
      * @return a new JTextField (JFormattedTextField)
      */
-    private static JTextField getjTextField(ContentPackage content, JDBCType typeSQL) {
+    private static JTextField getjTextField() {
         JTextField textField = new JFormattedTextField();
 
         //no fixed size to let partial search but in DocFilter max size is set
