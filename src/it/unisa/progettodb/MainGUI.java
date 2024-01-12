@@ -422,16 +422,25 @@ public class MainGUI {
         JMenuItem sumWeight = new JMenuItem("Somma Pesi");
         JMenuItem countDeliveries = new JMenuItem("Consegne > 2K");
         JMenuItem vehicleMaxDeliveries = new JMenuItem("Mezzo con più Consegne");
+        JMenuItem onlyTruckCarriers = new JMenuItem("Solo Camionisti");
+        JMenuItem wareInAllCenter = new JMenuItem("Merce in Tutti i Centri");
+        JMenuItem centerWithAllWares = new JMenuItem("Centri con tutte le Merci"); //Optional
         batchMenu.add(sumStipendi);
         batchMenu.add(sumWeight);
         batchMenu.add(countDeliveries);
         batchMenu.add(vehicleMaxDeliveries);
+        batchMenu.add(onlyTruckCarriers);
+        batchMenu.add(wareInAllCenter);
+        batchMenu.add(centerWithAllWares);
 
         //Batch Listeners
         sumStipendi.addActionListener( e -> this.menuAction.openSumStipendiDialog());
         sumWeight.addActionListener(e -> this.menuAction.openSumWeightDialog());
         countDeliveries.addActionListener(e -> this.menuAction.openCountDeliveriesDialog());
         vehicleMaxDeliveries.addActionListener(e -> this.menuAction.openVehicleMaxDeliveriesDialog());
+        onlyTruckCarriers.addActionListener(e -> this.menuAction.openOnlyTruckCarriersDialog());
+        wareInAllCenter.addActionListener(e ->this.menuAction.openWareInAllCenterDialog());
+        centerWithAllWares.addActionListener( e-> this.menuAction.openCenterWithAllWaresDialog());
 
         //Rimuovi Dipendente Listener
         rimuoviDipendente.addActionListener(e ->{

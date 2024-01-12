@@ -78,6 +78,47 @@ public class MenuAction {
         }
     }
 
+    /**
+     * Action for JMenuItem vehicleMaxDeliveries
+     */
+    void openOnlyTruckCarriersDialog(){
+        try {
+            ContentWrap result = Operations.getOnlyTruckCarriers(this.managerDB);
+            createTableDialog(result, "cte_truck_driver", 600, 400, "Solo Camionisti");
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this.owner, "Error: \n" + ex.getMessage());
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * Action for JMenuItem wareInAllCenter
+     */
+    public void openWareInAllCenterDialog() {
+        try {
+            ContentWrap result = Operations.getWareInAllCenter(this.managerDB);
+            createTableDialog(result, "cte_ware_center", 600, 400, "TipoMerce consegnata in tutti i Centri");
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this.owner, "Error: \n" + ex.getMessage());
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * Action for JMenuItem centerWithAllWares
+     */
+    public void openCenterWithAllWaresDialog() {
+        try {
+            ContentWrap result = Operations.getCenterWithAllWares(this.managerDB);
+            createTableDialog(result, "cte_center_ware", 600, 400, "Centri che hanno ricevuto Tutti i Tipi Merce - Optional");
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this.owner, "Error: \n" + ex.getMessage());
+            throw new RuntimeException(ex);
+        }
+    }
 
     /* ============================== DIALOG CREATOR =================================== */
 

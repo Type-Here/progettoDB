@@ -73,13 +73,58 @@ public class Operations {
      * Mezzo il cui numero di consegne è il più alto. B
      */
     public static ContentWrap getVehicleMaxDeliveries(DBManagement managerDB) throws SQLException {
-        String query = "WITH ContaConsegne AS( SELECT targa, COUNT(*) AS NumConsegne FROM consegna GROUP BY targa) " +
-                        "SELECT * " +
-                        "FROM ContaConsegne JOIN mezzo USING(targa) " +
-                        "WHERE numconsegne = (SELECT MAX(numconsegne) as max FROM ContaConsegne);";
+        String query = """
+                WITH ContaConsegne AS( SELECT targa, COUNT(*) AS NumConsegne FROM consegna GROUP BY targa) \s
+                SELECT *\s
+                FROM ContaConsegne JOIN mezzo USING(targa)\s
+                WHERE numconsegne = (SELECT MAX(numconsegne) as max FROM ContaConsegne);""";
+        return managerDB.execute(query);
+    }
+
+    /**
+     * Op.19 <br />
+     * Mezzo il cui numero di consegne è il più alto. B
+     */
+    public static ContentWrap getOnlyTruckCarriers(DBManagement managerDB) throws SQLException {
+        String query = """
+                SELECT *\s
+                FROM trasportatore\s
+                WHERE matricola IN (SELECT matricola FROM consegna JOIN mezzo USING(targa) WHERE tipologia='Autotreno' OR tipologia='Motrice')\s
+                AND matricola NOT IN (SELECT matricola FROM consegna JOIN mezzo USING(targa) WHERE tipologia='Treno');""";
         return managerDB.execute(query);
     }
 
 
+    /**
+     * Op.20a <br />
+     * Selezione del Tipo di Merce (Nome, Codice) che è stata consegnata in tutti i Centri di Distribuzione; B
+     * Divisione
+     */
+    public static ContentWrap getWareInAllCenter(DBManagement managerDB) throws SQLException {
+        String query = """
+                SELECT Nome, Codice FROM TipoMerce M\s
+                WHERE NOT EXISTS (SELECT * FROM CentroDistribuzione D\s
+                                  WHERE NOT EXISTS (SELECT * FROM Consegna C\s
+                                                    WHERE M.Codice = C.CodiceMerce\s
+                                                    AND D.Zona = C.Zona\s
+                                                    AND D.Citta = C.Citta) );""";
+        return managerDB.execute(query);
+    }
+
+    /**
+     * Op.20b <br />
+     * I centri distribuzione che hanno ricevuto tutti i tipi di merci; B
+     * Divisione
+     */
+    public static ContentWrap getCenterWithAllWares(DBManagement managerDB) throws SQLException {
+        String query = """
+                SELECT * FROM CentroDistribuzione D\s
+                WHERE NOT EXISTS (SELECT * FROM TipoMerce M\s
+                                  WHERE NOT EXISTS (SELECT * FROM Consegna C\s
+                                                    WHERE M.Codice = C.CodiceMerce\s
+                                                    AND D.Zona = C.Zona\s
+                                                    AND D.Citta = C.Citta) );""";
+        return managerDB.execute(query);
+    }
 
 }
