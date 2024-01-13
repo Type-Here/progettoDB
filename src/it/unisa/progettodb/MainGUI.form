@@ -65,6 +65,13 @@
               <text value="Dettagli"/>
             </properties>
           </component>
+          <component id="5503e" class="javax.swing.JLabel" binding="resetFiltroLabel">
+            <constraints/>
+            <properties>
+              <enabled value="true"/>
+              <text value=""/>
+            </properties>
+          </component>
         </children>
       </grid>
       <scrollpane id="11f3">

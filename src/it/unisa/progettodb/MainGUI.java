@@ -14,8 +14,10 @@ import it.unisa.progettodb.sql.DBManagement;
 import javax.swing.*;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
+import javax.swing.event.MouseInputListener;
 import java.awt.*;
 
+import java.awt.event.MouseEvent;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -30,6 +32,7 @@ public class MainGUI {
     private JButton modificaButton;
     private JButton eliminaButton;
     private JButton dettagliButton;
+    private JLabel resetFiltroLabel;
     /* Custom Objects */
     private final JMenuBar menuBar;
     private DBManagement managerDB;
@@ -75,7 +78,9 @@ public class MainGUI {
 
         /*Set Combo Box Listener*/
         setComboBoxListener();
+        setResetFiltroLabel();
     }
+
 
 
     /* ---------------------------- PUBLIC METHODS --------------------- */
@@ -333,6 +338,45 @@ public class MainGUI {
     }
 
     /**
+     * Set Settings and Listeners for Label used as Alternative Button for Resetting Filter when is Enabled.
+     */
+    private void setResetFiltroLabel() {
+        this.resetFiltroLabel.setText("Reset Filtro");
+        this.resetFiltroLabel.setForeground(Color.BLUE);
+        this.resetFiltroLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 12));
+        this.resetFiltroLabel.setVisible(false);
+        this.resetFiltroLabel.addMouseListener(new MouseInputListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(filter.isFiltered()) {
+                    filter=null;
+                    cercaTabButton.doClick();
+                    resetFiltroLabel.setVisible(false);
+                    resetFiltroLabel.revalidate();
+                }
+
+            }
+            @Override
+            public void mousePressed(MouseEvent e) {
+                resetFiltroLabel.setForeground(Color.BLACK);
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                resetFiltroLabel.setForeground(Color.BLUE);
+            }
+            @Override
+            public void mouseEntered(MouseEvent e) {}
+            @Override
+            public void mouseExited(MouseEvent e) {}
+            @Override
+            public void mouseDragged(MouseEvent e) {}
+            @Override
+            public void mouseMoved(MouseEvent e) {}
+        });
+    }
+
+
+    /**
      * Create Main Menu
      * @return JMenuBar
      */
@@ -408,6 +452,7 @@ public class MainGUI {
             ContentWrap filteredWrap = this.filter.createDialog(this.filter.isFiltered()); //NB return a ContentWrap not a boolean unlike createDialog in some other classes
             if(filteredWrap != null) this.tableManager.setTable(filteredWrap,this.currentTable); //null is not always an error, also canceled op by user
             this.filter.setFiltered(true);
+            this.resetFiltroLabel.setVisible(true);
         });
 
 
