@@ -1,12 +1,17 @@
 package it.unisa.progettodb;
 
+import it.unisa.progettodb.datacontrol.ContentPackage;
 import it.unisa.progettodb.datacontrol.ContentWrap;
+import it.unisa.progettodb.dialogs.UserPanelDialog;
 import it.unisa.progettodb.sql.DBManagement;
 import it.unisa.progettodb.sql.Operations;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
+import java.sql.JDBCType;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 public class MenuAction {
 
@@ -120,6 +125,71 @@ public class MenuAction {
         }
     }
 
+
+    /* ================================ INTERACTIVE ===================================== */
+    /**
+     * Action for JMenuItem workersPerOffice
+     */
+    public void setWorkersPerOfficeDialog() {
+        ContentPackage sede = new ContentPackage(1, null, "città", JDBCType.VARCHAR);
+        List<ContentPackage> list = new ArrayList<>();
+        list.add(sede);
+        UserPanelDialog main = (UserPanelDialog) UserPanelDialog.createUserInputPanel(list);
+        if( JOptionPane.showConfirmDialog(this.owner, main, "Seleziona Città",
+                            JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION ){
+            try {
+                ContentWrap result = Operations.getWorkersPerOffice(this.managerDB, main.getTexts());
+                createTableDialog(result, "cte_worker_office", 600, 400, "Lavoratori In Sede " + main.getTexts().get("città"));
+
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this.owner, "Error: \n" + ex.getMessage());
+                throw new RuntimeException(ex);
+            }
+        }
+    }
+
+    /**
+     * Action for JMenuItem fuelConsumption
+     */
+    public void setFuelConsumptionDialog() {
+        ContentPackage anno = new ContentPackage(1, null, "anno", JDBCType.INTEGER);
+        List<ContentPackage> list = new ArrayList<>();
+        list.add(anno);
+        UserPanelDialog main = (UserPanelDialog) UserPanelDialog.createUserInputPanel(list);
+        if( JOptionPane.showConfirmDialog(this.owner, main, "Seleziona Anno",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION ){
+            try {
+                ContentWrap result = Operations.getFuelConsumption(this.managerDB, main.getTexts());
+                createTableDialog(result, "cte_fuel", 600, 400, "Consumo Carburante Anno " + main.getTexts().get("anno"));
+
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this.owner, "Error: \n" + ex.getMessage());
+                throw new RuntimeException(ex);
+            }
+        }
+    }
+
+    /**
+     * Action for JMenuItem deliveriesOp13
+     */
+    public void setDeliveries13Dialog() {
+        List<ContentPackage> list = new ArrayList<>();
+        list.add(new ContentPackage(1, null, "codice", JDBCType.CHAR));
+        list.add(new ContentPackage(2, null, "data", JDBCType.DATE));
+        UserPanelDialog main = (UserPanelDialog) UserPanelDialog.createUserInputPanel(list);
+        if( JOptionPane.showConfirmDialog(this.owner, main, "Seleziona Codice Merce e Data",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION ){
+            try {
+                ContentWrap result = Operations.getDeliveriesOp13(this.managerDB, main.getTexts());
+                createTableDialog(result, "cte_op13", 600, 400, "Consegne per Tipo e Data ");
+
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this.owner, "Error: \n" + ex.getMessage());
+                throw new RuntimeException(ex);
+            }
+        }
+    }
+
     /* ============================== DIALOG CREATOR =================================== */
 
 
@@ -142,6 +212,5 @@ public class MenuAction {
         panel.add(new JScrollPane(detailsTable));
         JOptionPane.showMessageDialog(this.owner, panel, title, JOptionPane.PLAIN_MESSAGE);
     }
-
 
 }

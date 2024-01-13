@@ -3,7 +3,10 @@ package it.unisa.progettodb.sql;
 import it.unisa.progettodb.datacontrol.ContentPackage;
 import it.unisa.progettodb.datacontrol.ContentWrap;
 
+import java.sql.JDBCType;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /* =========== THIS CLASS IS HIGHLY DATABASE SPECIFIC =========== */
@@ -12,6 +15,24 @@ import java.util.List;
 public class Operations {
 
     /* =================================== INTERACTIVE ================================== */
+
+
+    /**
+     * Op.13 <br />
+     * Selezione Consegne in base a Tipo Merce e Data, ordinato per Centro di Distribuzione; I <br />
+     * 'Texts' is input from user. In this case 2.
+     */
+    public static ContentWrap getDeliveriesOp13(DBManagement managerDB, HashMap<String, Object> texts) throws SQLException {
+        String query = """
+               SELECT * FROM Consegna WHERE CodiceMerce=? AND DataConsegna=? ORDER BY Citta, Zona;
+               """;
+        List<ContentPackage> dati = new ArrayList<>();
+        dati.add(new ContentPackage(1, (String) texts.get("codice"), "codice", JDBCType.CHAR));
+        dati.add(new ContentPackage(2, (String) texts.get("data"), "data", JDBCType.DATE));
+        System.out.println("Dati Pre Query:" + texts.get("codice") +  " " + texts.get("data"));
+        return managerDB.execute(query, ContentPackage.returnDataForQuery(dati));
+    }
+
 
     /**
      * Op.14 <br />
@@ -26,6 +47,43 @@ public class Operations {
         String tableJoin = "( consegna c join tipomerce m on c.CodiceMerce = m.Codice ) join mezzo using(targa) ";
         return managerDB.executeSelect(new String[]{"*"}, tableJoin, ContentPackage.returnDataForQuery(rowData));
     }
+
+
+    /**
+     * Op.21 <br />
+     * Selezione Impiegati in Determinata Sede con Annesso Dirigente; Op21 I <br />
+     * 'Texts' is input from user. In this case 1.
+     */
+
+    public static ContentWrap getWorkersPerOffice(DBManagement managerDB, HashMap<String, Object> texts) throws SQLException {
+        String query = """
+                WITH sedeScelta AS (SELECT codicesede FROM sede WHERE citta = ?)\s
+                SELECT *\s
+                FROM dipendente\s
+                WHERE matricola IN (SELECT matricola FROM impiegato WHERE codicesede IN (SELECT codicesede FROM sedeScelta))\s
+                   OR matricola IN (SELECT matricola FROM dirigente WHERE codicesede IN (SELECT codicesede FROM sedeScelta));
+                """;
+        return managerDB.execute(query, texts);
+    }
+
+
+    /**
+     * Op.22 <br />
+     * Somma Consumi di ogni Mezzo per quell’anno; I <br />
+     * 'Texts' is input from user. In this case 1.
+     */
+    public static ContentWrap getFuelConsumption(DBManagement managerDB, HashMap<String, Object> texts) throws SQLException {
+        String query = """
+                SELECT targa, ROUND(SUM(consumo * distanza),2) AS KmPercorsi
+                FROM consegna JOIN mezzo USING(targa) JOIN centrodistribuzione USING(citta,zona)
+                WHERE YEAR(dataconsegna) = ?
+                GROUP BY targa;
+                """;
+        List<ContentPackage> anno = new ArrayList<>();
+        anno.add(new ContentPackage(1, (String) texts.get("anno"), "anno", JDBCType.INTEGER));
+        return managerDB.execute(query, ContentPackage.returnDataForQuery(anno));
+    }
+
 
 
     /* ======================================== BATCH ========================================== */
@@ -124,5 +182,6 @@ public class Operations {
                                                     AND D.Citta = C.Citta) );""";
         return managerDB.execute(query);
     }
+
 
 }

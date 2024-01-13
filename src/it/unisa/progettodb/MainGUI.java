@@ -412,10 +412,12 @@ public class MainGUI {
 
 
         /* Operazioni Menu */
-        JMenuItem rimuoviDipendente = new JMenuItem("Liberate i Cani");
+        JMenuItem rimuoviDipendente = new JMenuItem("Opzioni Dipendente");
         JMenu batchMenu = new JMenu("Batch");
+        JMenu interactiveMenu = new JMenu("Interattive");
         menuOperazioni.add(rimuoviDipendente);
         menuOperazioni.add(batchMenu);
+        menuOperazioni.add(interactiveMenu);
 
         /* Operazioni Menu - batchMenu */
         JMenuItem sumStipendi = new JMenuItem("Somma Stipendi");
@@ -441,6 +443,20 @@ public class MainGUI {
         onlyTruckCarriers.addActionListener(e -> this.menuAction.openOnlyTruckCarriersDialog());
         wareInAllCenter.addActionListener(e ->this.menuAction.openWareInAllCenterDialog());
         centerWithAllWares.addActionListener( e-> this.menuAction.openCenterWithAllWaresDialog());
+
+        /* Operazioni Menu - interactiveMenu */
+        JMenuItem workersPerOffice = new JMenuItem("Lavoratori Per Sede");
+        JMenuItem fuelConsumption = new JMenuItem("Consumo Totale Annuo");
+        JMenuItem deliveriesOp13 = new JMenuItem("Consegne per Merce e Data");
+        interactiveMenu.add(workersPerOffice);
+        interactiveMenu.add(fuelConsumption);
+        interactiveMenu.add(deliveriesOp13);
+
+        //Interactive Listeners
+        workersPerOffice.addActionListener(e -> this.menuAction.setWorkersPerOfficeDialog());
+        fuelConsumption.addActionListener(e -> this.menuAction.setFuelConsumptionDialog());
+        deliveriesOp13.addActionListener(e -> this.menuAction.setDeliveries13Dialog());
+
 
         //Rimuovi Dipendente Listener
         rimuoviDipendente.addActionListener(e ->{
