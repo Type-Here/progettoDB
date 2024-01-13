@@ -100,7 +100,7 @@ public class MenuAction {
     /**
      * Action for JMenuItem wareInAllCenter
      */
-    public void openWareInAllCenterDialog() {
+    void openWareInAllCenterDialog() {
         try {
             ContentWrap result = Operations.getWareInAllCenter(this.managerDB);
             createTableDialog(result, "cte_ware_center", 600, 400, "TipoMerce consegnata in tutti i Centri");
@@ -114,7 +114,7 @@ public class MenuAction {
     /**
      * Action for JMenuItem centerWithAllWares
      */
-    public void openCenterWithAllWaresDialog() {
+    void openCenterWithAllWaresDialog() {
         try {
             ContentWrap result = Operations.getCenterWithAllWares(this.managerDB);
             createTableDialog(result, "cte_center_ware", 600, 400, "Centri che hanno ricevuto Tutti i Tipi Merce - Optional");
@@ -135,7 +135,7 @@ public class MenuAction {
         List<ContentPackage> list = new ArrayList<>();
         list.add(sede);
         UserPanelDialog main = UserPanelDialog.createUserInputPanel(list);
-        if( JOptionPane.showConfirmDialog(this.owner, main, "Seleziona Città",
+        if( JOptionPane.showConfirmDialog(this.owner, main.getPanel(), "Seleziona Città",
                             JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION ){
             try {
                 ContentWrap result = Operations.getWorkersPerOffice(this.managerDB, main.getTexts());
@@ -156,7 +156,7 @@ public class MenuAction {
         List<ContentPackage> list = new ArrayList<>();
         list.add(anno);
         UserPanelDialog main = UserPanelDialog.createUserInputPanel(list);
-        if( JOptionPane.showConfirmDialog(this.owner, main, "Seleziona Anno",
+        if( JOptionPane.showConfirmDialog(this.owner, main.getPanel(), "Seleziona Anno",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION ){
             try {
                 ContentWrap result = Operations.getFuelConsumption(this.managerDB, main.getTexts());
