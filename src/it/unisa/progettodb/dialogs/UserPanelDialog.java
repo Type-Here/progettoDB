@@ -13,19 +13,18 @@ import java.time.DayOfWeek;
 import java.util.*;
 import java.util.List;
 
-public class UserPanelDialog  extends JPanel{
+public class UserPanelDialog {
+    private JPanel panel;
     private final HashMap<String, JComponent> fields;
-    public UserPanelDialog(LayoutManager layout) {
-        super(layout);
-        this.setPreferredSize(new Dimension(400, 300));
-        this.fields = new LinkedHashMap<>();
-    }
 
     public UserPanelDialog() {
-        super();
         this.fields = new LinkedHashMap<>();
+        this.panel = null;
     }
 
+    public JPanel getPanel() {
+        return panel;
+    }
 
     private void addField(String name, JComponent field){
         this.fields.put(name, field);
@@ -53,9 +52,11 @@ public class UserPanelDialog  extends JPanel{
      * Use DocumentFilter and inputValidator to Check On Input User.
      * @param contentPackageList containing only MetaData (index, columnName, precision, isNullable, JDBCType)
      */
-    public static JPanel createUserInputPanel(List<ContentPackage> contentPackageList){
+    public static UserPanelDialog createUserInputPanel(List<ContentPackage> contentPackageList){
         JPanel mainDialogPanel = new JPanel(new GridLayout(contentPackageList.size(), 2));
-        UserPanelDialog mainDialog = new UserPanelDialog(new GridLayout(contentPackageList.size(), 2));
+        UserPanelDialog main = new UserPanelDialog();
+        main.panel = mainDialogPanel;
+
         for(ContentPackage content: contentPackageList) {
 
             JDBCType typeSQL = content.getType();
@@ -74,7 +75,7 @@ public class UserPanelDialog  extends JPanel{
                 datePicker = new DatePicker(datePickerSettings);
 
                 rowPanel.add(datePicker);
-                mainDialog.addField(content.getColumnName(), datePicker);
+                main.addField(content.getColumnName(), datePicker);
 
                 /* THIS IS IMPLEMENTATION SPECIFIC - NO BOOLEAN IN OUR DB HAS TO BE SET BY USER */
             } else if (content.getType().equals(JDBCType.BIT) || content.getType().equals(JDBCType.BOOLEAN)) {
@@ -96,26 +97,16 @@ public class UserPanelDialog  extends JPanel{
                 textField.setPreferredSize(new Dimension(200, 20));
 
                 rowPanel.add(textField);
-                mainDialog.addField(content.getColumnName(), textField);
+                main.addField(content.getColumnName(), textField);
             }
-
-            SwingUtilities.invokeLater(() -> {
-                mainDialog.add(rowPanel);
-                mainDialog.revalidate();
-                mainDialog.repaint();
-            });
 
             //mainDialog.add(rowPanel);
             mainDialogPanel.add(rowPanel);
         }
-        System.out.println("Create Panel: ");
-        mainDialog.list();
-        System.out.println(" -- ");
-        System.out.println(mainDialog.getTexts());
-        mainDialog.setFocusTraversalKeysEnabled(true);
+
         mainDialogPanel.setFocusTraversalKeysEnabled(true);
 
-        return mainDialog;
+        return main;
     }
 
 }

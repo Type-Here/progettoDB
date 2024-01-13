@@ -119,7 +119,7 @@ public class Update extends JOptionPane implements DataManipulation{
      * @param contentPackageList containing only MetaData (index, columnName, precision, isNullable, JDBCType)
      */
     private void setPanel(List<ContentPackage> contentPackageList, HashMap<String, Integer> primaryKeys) {
-        this.mainDialogPanel = UserPanelDialog.createUserInputPanel(contentPackageList);
+        this.mainDialogPanel = UserPanelDialog.createUserInputPanel(contentPackageList).getPanel();
 
         Component[] c = mainDialogPanel.getComponents();
         int i = 0;

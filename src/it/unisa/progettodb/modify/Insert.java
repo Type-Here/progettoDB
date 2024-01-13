@@ -103,7 +103,7 @@ public class Insert extends JOptionPane implements DataManipulation{
      * @param contentPackageList containing only MetaData (index, columnName, precision, isNullable, JDBCType)
      */
     private void setPanel(List<ContentPackage> contentPackageList) {
-        mainDialogPanel = UserPanelDialog.createUserInputPanel(contentPackageList);
+        mainDialogPanel = UserPanelDialog.createUserInputPanel(contentPackageList).getPanel();
     }
 
     /**

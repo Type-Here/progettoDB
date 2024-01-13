@@ -176,8 +176,8 @@ public class MenuAction {
         List<ContentPackage> list = new ArrayList<>();
         list.add(new ContentPackage(1, null, "codice", JDBCType.CHAR));
         list.add(new ContentPackage(2, null, "data", JDBCType.DATE));
-        UserPanelDialog main = (UserPanelDialog) UserPanelDialog.createUserInputPanel(list);
-        if( JOptionPane.showConfirmDialog(this.owner, main, "Seleziona Codice Merce e Data",
+        UserPanelDialog main = UserPanelDialog.createUserInputPanel(list);
+        if( JOptionPane.showConfirmDialog(this.owner, main.getPanel(), "Seleziona Codice Merce e Data",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION ){
             try {
                 ContentWrap result = Operations.getDeliveriesOp13(this.managerDB, main.getTexts());
