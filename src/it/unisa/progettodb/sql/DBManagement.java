@@ -437,7 +437,8 @@ public class DBManagement {
             }
             pStmt.setObject(i++, e.getValue());
         }
-        System.out.println(pStmt.toString());
+        //System.out.println(pStmt.toString());
+
         try(ResultSet rSet = pStmt.executeQuery() ) {
             this.sendToLog("with Conditions: " + pStmt, ActionEnum.Select);
 
@@ -493,6 +494,31 @@ public class DBManagement {
         }
     }
 
+    /**
+     * Package Only <br />
+     * Execute a Generic Statement Passed String Query - With User Input . <br />
+     * @param query String with complete Query
+     * @param fill data to fill the Prepared Statement
+     * @return ContentWrap with Result Data and MetaData
+     * @throws SQLException if Query Fails
+     */
+    ContentWrap execute(String query, HashMap<String,Object> fill) throws SQLException {
+        try(PreparedStatement pStmt = connectDB.prepareStatement(query)){
+            int i = 1;
+            for(Map.Entry<String, Object> e : fill.entrySet()){
+                if(e.getValue() == null) throw new RuntimeException("Valore Null in UPDATE DBManagement");
+                if(e.getValue() instanceof String s){
+                    if(s.isEmpty()) throw new RuntimeException("Stringa Vuota in UPDATE DBManagement");
+                }
+                pStmt.setObject(i++, e.getValue());
+            }
+
+            try(ResultSet rSet = pStmt.executeQuery()){
+                this.sendToLog("Filled Stmt - " + pStmt, ActionEnum.Query);
+                return ContentWrap.getContentWrap(rSet);
+            }
+        }
+    }
 
 
     /* ================== LOGS METOHDS ==================== */
