@@ -70,17 +70,19 @@ public class Update extends JOptionPane implements DataManipulation{
             /*Create JPanel*/
             setPanel(contentPackageList, primaryKeyName);
             /* Show First Dialog */
-            int result = JOptionPane.showConfirmDialog(this.owner, mainDialogPanel, "Insert Data in Table",
-                                                        this.optionType, this.messageType);
-            if(result == JOptionPane.OK_OPTION){
+            if( JOptionPane.showConfirmDialog(this.owner, mainDialogPanel, "Insert Data in Table",
+                                                        this.optionType, this.messageType)
+                        == JOptionPane.OK_OPTION){
 
-                List<ContentPackage> emptyData = managerDB.makeEmptyContentPackage(this.workingTable);
+                List<ContentPackage> emptyData = managerDB.makeEmptyContentPackage(this.workingTable); //metaData
                 DataManipulation.removeNonUserModifyAbleData(emptyData, this.workingTable);
 
                 List<ContentPackage> updateData = validateData(emptyData, this.contentPackageList);
-                int res = finalCheckDialog(ContentPackage.returnDataMapAsString(this.contentPackageList),
-                                            ContentPackage.returnDataMapAsString(updateData));
-                if(res == JOptionPane.OK_OPTION){
+
+                /*Confirm Dialog*/
+                if(finalCheckDialog(ContentPackage.returnDataMapAsString(this.contentPackageList),
+                                            ContentPackage.returnDataMapAsString(updateData))
+                        == JOptionPane.OK_OPTION ){
 
                     /*MAIN ACTION: Execute Update */
                     this.managerDB.executeUpdate(ContentPackage.returnDataForQuery(updateData),
@@ -131,7 +133,7 @@ public class Update extends JOptionPane implements DataManipulation{
                         ContentPackage cp = contentPackageList.get(i++);
                         if (primaryKeys.keySet().stream().anyMatch(key -> cp.getColumnName().equalsIgnoreCase(key))) {
                             comp.setEnabled(false);
-                            ((JComponent) comp).setToolTipText("Disable Update On Key");
+                            ((JComponent) comp).setToolTipText("Disabled Update On Key Attribute");
                         }
                         if (comp instanceof JFormattedTextField f) {
                             f.setText(cp.getDataString());
