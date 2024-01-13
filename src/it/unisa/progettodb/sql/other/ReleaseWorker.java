@@ -60,24 +60,38 @@ public class ReleaseWorker extends JOptionPane implements DataManipulation {
         mainDialog.add(firstRow);
         this.setMessage(mainDialog);
         try {
+            /* First Prompt: Choose an ID */
             if (JOptionPane.showConfirmDialog(this.owner, mainDialog,
                     "Seleziona Matricola", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
                 String id = idTextField.getText().trim();
 
+                /* Check: if No input is Inserted Throw Message */
                 if (id.isEmpty()) throw new ValidatorException("Matricola Vuota o Non Valida");
+
+                /* Search for Data */
                 HashMap<String, Object> condition = new HashMap<>();
                 condition.put("Matricola", id);
                 ContentWrap data = this.managerDB.executeSelect(new String[]{"*"}, ReleaseWorker.tableName, condition);
 
+                /* If No Worker is found show message */
+                if(data.getRows().isEmpty()) throw new ValidatorException("Nessun Dipendente Trovato");
+
+                /* Second Prompt: Data Visualisation and Setting*/
                 if(this.showDataDialog(data) == JOptionPane.OK_OPTION && isWorkerOld != isWorkerNew){
+
+                    /*Last Prompt: If Data Modified and OK_OPTION - Ask for Confirm */
                     if(this.finalDialog() == JOptionPane.OK_OPTION){
+
+                        /*THIS SECTION IS DB DEPENDENT. MANUAL Column Names ARE INSERTED*/
                         HashMap<String, Object> dataMap = new HashMap<>();
                         dataMap.put("AttualeDipendente", isWorkerNew);
 
                         HashMap<String, Object> primKey = new HashMap<>();
                         primKey.put("Matricola", id);
 
+                        /* Execute Update */
                         this.managerDB.executeUpdate(dataMap, ReleaseWorker.tableName, primKey);
+
                         return true;
                     }
                 }
@@ -85,7 +99,7 @@ public class ReleaseWorker extends JOptionPane implements DataManipulation {
 
         } catch (ValidatorException | SQLException e){
             JOptionPane.showMessageDialog(this.owner, "Error:\n" + e.getMessage(), "Errore", JOptionPane.ERROR_MESSAGE);
-            throw new RuntimeException();
+            return false;
         }
         return false;
     }
@@ -98,12 +112,16 @@ public class ReleaseWorker extends JOptionPane implements DataManipulation {
     private int showDataDialog(ContentWrap data) {
         AtomicBoolean isWorker = new AtomicBoolean(false);
         StringBuilder build = new StringBuilder("<html>Dati Dipendente: \n");
+
         data.getRows().forEach((key, value) -> {
             for(int i = 0; i < data.getMetaData().size(); i++){
                 ContentPackage c = data.getMetaData().get(i);
 
                 if(c.getType().equals(JDBCType.BIT) || c.getType().equals(JDBCType.BOOLEAN)){
-                       isWorker.set(value.get(i).equals("1") || value.get(i).equalsIgnoreCase("true"));
+
+                    //Now bit values already Prompts 'Si' or 'No' because of changes made in ContentWrap Creation
+                    isWorker.set(value.get(i).equalsIgnoreCase("si") || value.get(i).equals("1") || value.get(i).equalsIgnoreCase("true") );
+
                     build.append(" ").append(c.getColumnName()).append(": ");
                     build.append(isWorker.get() ? "Si" : "No").append("    <br />");
                     continue;
@@ -113,6 +131,7 @@ public class ReleaseWorker extends JOptionPane implements DataManipulation {
             }
         });
         build.append("</html>");
+
         this.isWorkerOld = isWorker.get();
 
         JLabel dataPrint = new JLabel(build.toString());
@@ -130,6 +149,7 @@ public class ReleaseWorker extends JOptionPane implements DataManipulation {
         row2.add(checkBoxSi);
         row2.add(checkBoxNo);
 
+        /* CheckBox Listeners to work like a simple RadioButton */
         checkBoxSi.addActionListener(e ->{
             if(checkBoxSi.isSelected()){
                 checkBoxNo.setSelected(false);
