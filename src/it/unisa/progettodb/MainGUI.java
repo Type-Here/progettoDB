@@ -6,9 +6,9 @@ import it.unisa.progettodb.logs.LoggerManager;
 import it.unisa.progettodb.modify.Delete;
 import it.unisa.progettodb.modify.Insert;
 import it.unisa.progettodb.modify.Update;
-import it.unisa.progettodb.sql.operations.FilterData;
+import it.unisa.progettodb.sql.other.FilterData;
 import it.unisa.progettodb.sql.Operations;
-import it.unisa.progettodb.sql.operations.ReleaseWorker;
+import it.unisa.progettodb.sql.other.ReleaseWorker;
 import it.unisa.progettodb.sql.DBManagement;
 
 import javax.swing.*;
@@ -109,9 +109,9 @@ public class MainGUI {
         managerDB.closeConnection();
     }
 
-    /* ----------------------- PRIVATE METHODS ------------------------- */
+    /* ======================================== PRIVATE METHODS ============================================= */
 
-    /* -------- LISTENERS --------- */
+            /* ---------------------------------- LISTENERS ---------------------------------- */
 
     /**
      * Set Table Listeners adn Settings.
@@ -184,7 +184,7 @@ public class MainGUI {
     private Object makeObj(final String item)  {
         return new Object() { public String toString() { return item; } };
     }
-
+                                        /* ----------- BUTTON LISTERENERS ----------- */
     /**
      * Adds Listener to cercaTabButton
      */
@@ -302,6 +302,7 @@ public class MainGUI {
     }
 
 
+
     /**
      * Set Listener for JComboBox tabelleComboBox:
      * If table is already selected set text of research button to 'Reload'
@@ -320,7 +321,7 @@ public class MainGUI {
     }
 
 
-    /* ---------- GRAPHIC COMPONENTS ------------ */
+                                    /* ---------- GRAPHIC COMPONENTS ------------ */
 
     /**
      * Sets JPanel topPanel.
@@ -440,7 +441,6 @@ public class MainGUI {
         deleteModifica.addActionListener(e ->{
 
         });
-        /*TODO*/
 
         /* Selezione Menu */
         JMenuItem filtraDati = new JMenuItem("Filtra...");
@@ -514,21 +514,15 @@ public class MainGUI {
                 }
             }
         });
-        /*TODO*/
 
         /* About Menu */
         String aboutMessage = "From ATI S.P.A. \nCreated By: type-here and gianni \nVersion 0.1";
-        menuAbout.addMenuListener(new MenuListener() {
-            @Override
-            public void menuSelected(MenuEvent e) {
-                JOptionPane.showMessageDialog(getMainContainer(), aboutMessage, "About", JOptionPane.INFORMATION_MESSAGE);
-            }
-            @Override
-            public void menuDeselected(MenuEvent e) { }
-            @Override
-            public void menuCanceled(MenuEvent e) { }
-        });
-
+        JMenuItem infoAbout = new JMenuItem("Info");
+        menuAbout.add(infoAbout);
+        infoAbout.addActionListener( e -> JOptionPane.showMessageDialog(getMainContainer(), aboutMessage,
+                                        "About", JOptionPane.INFORMATION_MESSAGE)
+                                    );
+        /* MENUBAR ADDS */
         menuBar.add(menuFile);
         menuBar.add(menuModifica);
         menuBar.add(menuSelezione);

@@ -1,4 +1,4 @@
-package it.unisa.progettodb.sql.operations;
+package it.unisa.progettodb.sql.other;
 
 import it.unisa.progettodb.datacontrol.ContentPackage;
 import it.unisa.progettodb.datacontrol.ContentWrap;

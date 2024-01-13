@@ -134,7 +134,7 @@ public class MenuAction {
         ContentPackage sede = new ContentPackage(1, null, "città", JDBCType.VARCHAR);
         List<ContentPackage> list = new ArrayList<>();
         list.add(sede);
-        UserPanelDialog main = (UserPanelDialog) UserPanelDialog.createUserInputPanel(list);
+        UserPanelDialog main = UserPanelDialog.createUserInputPanel(list);
         if( JOptionPane.showConfirmDialog(this.owner, main, "Seleziona Città",
                             JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION ){
             try {
@@ -155,7 +155,7 @@ public class MenuAction {
         ContentPackage anno = new ContentPackage(1, null, "anno", JDBCType.INTEGER);
         List<ContentPackage> list = new ArrayList<>();
         list.add(anno);
-        UserPanelDialog main = (UserPanelDialog) UserPanelDialog.createUserInputPanel(list);
+        UserPanelDialog main = UserPanelDialog.createUserInputPanel(list);
         if( JOptionPane.showConfirmDialog(this.owner, main, "Seleziona Anno",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.OK_OPTION ){
             try {

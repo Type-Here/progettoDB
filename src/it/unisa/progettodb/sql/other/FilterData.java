@@ -1,4 +1,4 @@
-package it.unisa.progettodb.sql.operations;
+package it.unisa.progettodb.sql.other;
 
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.components.DatePickerSettings;
