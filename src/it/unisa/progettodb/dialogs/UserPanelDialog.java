@@ -13,23 +13,54 @@ import java.time.DayOfWeek;
 import java.util.*;
 import java.util.List;
 
+/**
+ * Basic Use of <b>Composition over Inheritance</b> for Swing Components.
+ * An Object is only created in createUserInputPanel Static Method. <br />
+ * A JPanel is instantiated as a variable of this class object inside createUserInputPanel.
+ * This way we can obtain 2 major advantages. <br /><br />
+ * 1. EDT automatically take cares of updated panel. <br />
+ *    An extended class wouldn't work. It would need for each update inside the panel of SwingUtilities.invokeLater()
+ *    and would have required extra method call or bad design code in other classes with bad cohesion and coupling. <br /><br />
+ * 2. We can keep trace of all input JComponents (FieldTexts and DatePickers for now) with 'fields' HashMap.
+ *    In this way it's possible to avoid cycling through panel.getComponents() to get data when user confirm data in a JOptionPane Dialog. <br />
+ *    NB. This need a rewrite of some classes. At the moment only, MenuAction methods fully use this new implementation.
+ * @see #createUserInputPanel(List)
+ */
+
 public class UserPanelDialog {
     private JPanel panel;
     private final HashMap<String, JComponent> fields;
 
-    public UserPanelDialog() {
+    /**
+     * Private Constructor so it is needed createUserInputPanel to Create it
+     * @see it.unisa.progettodb.dialogs.UserPanelDialog#createUserInputPanel(List);
+     */
+    private UserPanelDialog() {
         this.fields = new LinkedHashMap<>();
         this.panel = null;
     }
 
+    /**
+     * Return User Input Dialog JPanel.
+     * @return JPanel main
+     */
     public JPanel getPanel() {
         return panel;
     }
 
+    /**
+     * Adds a Field in 'this' hashmap
+     * @param name Name of Column for which input component is created for (Used as Key)
+     * @param field JTextField or DatePicker to Get Data From
+     */
     private void addField(String name, JComponent field){
         this.fields.put(name, field);
     }
 
+    /**
+     * Return an HashMap with ColumnName And UserInput extracted from JComponents
+     * @return HashMap K:Name of Column - E: Object (Strings) with extracted data (May be null);
+     */
     public HashMap<String, Object> getTexts(){
         HashMap<String, Object> res = new HashMap<>();
         for(Map.Entry<String,JComponent> e : this.fields.entrySet()){
@@ -53,10 +84,13 @@ public class UserPanelDialog {
      * @param contentPackageList containing only MetaData (index, columnName, precision, isNullable, JDBCType)
      */
     public static UserPanelDialog createUserInputPanel(List<ContentPackage> contentPackageList){
-        JPanel mainDialogPanel = new JPanel(new GridLayout(contentPackageList.size(), 2));
         UserPanelDialog main = new UserPanelDialog();
+        /* We assign here a new JPanel so EDT can automatically detect updates.
+         * If the panel was created in constructor instead it wouldn't have worked as well (Tested)*/
+        JPanel mainDialogPanel = new JPanel(new GridLayout(contentPackageList.size(), 2));
         main.panel = mainDialogPanel;
 
+        /*For Each Column (Represented by a ContentPackage element) get its Input Panel (text fields of date pickers)*/
         for(ContentPackage content: contentPackageList) {
 
             JDBCType typeSQL = content.getType();
@@ -68,6 +102,7 @@ public class UserPanelDialog {
 
             JFormattedTextField textField;
             DatePicker datePicker;
+
             //If Data is a Date
             if (content.getType().equals(JDBCType.DATE)) {
                 DatePickerSettings datePickerSettings = new DatePickerSettings(Locale.ITALY);
