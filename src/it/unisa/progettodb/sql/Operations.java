@@ -74,7 +74,7 @@ public class Operations {
      */
     public static ContentWrap getFuelConsumption(DBManagement managerDB, HashMap<String, Object> texts) throws SQLException {
         String query = """
-                SELECT targa, ROUND(SUM(consumo * distanza),2) AS KmPercorsi
+                SELECT targa, ROUND(SUM(consumo * distanza),2) AS ConsumoAnnuo
                 FROM consegna JOIN mezzo USING(targa) JOIN centrodistribuzione USING(citta,zona)
                 WHERE YEAR(dataconsegna) = ?
                 GROUP BY targa;
