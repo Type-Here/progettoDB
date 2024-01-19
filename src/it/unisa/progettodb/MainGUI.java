@@ -12,8 +12,6 @@ import it.unisa.progettodb.sql.other.ReleaseWorker;
 import it.unisa.progettodb.sql.DBManagement;
 
 import javax.swing.*;
-import javax.swing.event.MenuEvent;
-import javax.swing.event.MenuListener;
 import javax.swing.event.MouseInputListener;
 import java.awt.*;
 
