@@ -48,6 +48,8 @@ public interface  DataManipulation {
         }
     }
 
+
+    @Deprecated
     static List<ContentPackage> retrieveDataFromPanel(List<ContentPackage> emptyData, JPanel mainDialogPanel) throws ValidatorException {
         Component[] components = mainDialogPanel.getComponents();
 

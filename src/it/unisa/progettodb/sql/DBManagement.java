@@ -204,7 +204,7 @@ public class DBManagement {
         return list;
     }
 
-
+    /* ================ PRIVATE SELECT TO USE RESULTSET INSIDE THIS CLASS ===================== */
 
     /**
      * Private Method (used to fetchMetaData ecc) <br />
@@ -488,6 +488,8 @@ public class DBManagement {
             }
         }
     }
+
+    /* -------------- EXECUTE PACKAGE-PRIVATE METHODS ------------------- */
 
     /**
      * Package Only <br />
