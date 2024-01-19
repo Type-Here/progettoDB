@@ -73,6 +73,10 @@ public class UserPanelDialog extends JComponent {
         return res;
     }
 
+    /**
+     * Getter for this HashMap Fields
+     * @return HashMap K: ColumnName - E: JComponent
+     */
     public HashMap<String, JComponent> getFields(){
         return this.fields;
     }
