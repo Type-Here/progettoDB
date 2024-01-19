@@ -28,6 +28,7 @@ public class Insert extends JOptionPane implements DataManipulation{
     private final Component owner;
     private JPanel mainDialogPanel;
     private List<ContentPackage> contentPackageList;
+    private UserPanelDialog userDialog;
 
     public Insert(Component owner, DBManagement managerDB, String workingTable) {
         super(null, JOptionPane.INFORMATION_MESSAGE, JOptionPane.OK_CANCEL_OPTION );
@@ -61,9 +62,9 @@ public class Insert extends JOptionPane implements DataManipulation{
             /* Open MAIN DIALOG for User Input */
             setPanel(listCP);
 
-            int result = JOptionPane.showConfirmDialog(this.owner, mainDialogPanel, "Insert Data in Table", this.optionType, this.messageType);
-
-            if(result == JOptionPane.OK_OPTION) { //Else User Pressed Cancel so Return
+            if( JOptionPane.showConfirmDialog(this.owner, this.userDialog.getPanel(), "Insert Data in Table",
+                                              this.optionType, this.messageType)
+                    == JOptionPane.OK_OPTION ){ //Else User Pressed Cancel so Return
 
                 /*Validate Data then Open Confirmation Dialog*/
                 contentPackageList = populateAndValidateData(listCP);
@@ -86,7 +87,7 @@ public class Insert extends JOptionPane implements DataManipulation{
                                         "Attenzione", JOptionPane.ERROR_MESSAGE);
 
         } catch (ValidatorException e) {
-            JOptionPane.showMessageDialog(this.mainDialogPanel, "Data Not Valid: \n" + e.getMessage(),
+            JOptionPane.showMessageDialog(this.owner, "Data Not Valid: \n" + e.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
 
@@ -103,61 +104,40 @@ public class Insert extends JOptionPane implements DataManipulation{
      * @param contentPackageList containing only MetaData (index, columnName, precision, isNullable, JDBCType)
      */
     private void setPanel(List<ContentPackage> contentPackageList) {
-        mainDialogPanel = UserPanelDialog.createUserInputPanel(contentPackageList).getPanel();
+        this.userDialog = UserPanelDialog.createUserInputPanel(contentPackageList);
+        mainDialogPanel = this.userDialog.getPanel();
     }
 
     /**
-     * NEW Populate and Validate Data Method <br />
+     * NEW Populate and Validate Data Method - Using New UserDialogPanel Methods<br />
      * After MainPanelDialog. <br />
      * Before is performed a validation for some of more sensible data (IDs like Targa, Matricola ecc)
-     * @param emptyData List of Content Package containing only MetaData for Each Column
+     * @param metaData List of Content Package containing only MetaData for Each Column
      * @return List&lt;ContentPackage&gt; With All Data and MetaData needed For Insertion
      * @throws ValidatorException if Validation Fails: Empty Strings, NON-Valid Formatting (i.e. Matricola must have AA0000 format) ecc...
      */
-    private List<ContentPackage> populateAndValidateData(List<ContentPackage> emptyData) throws ValidatorException {
-        Component[] components = mainDialogPanel.getComponents();
-
-        List<String> newData = new ArrayList<>();
+    private List<ContentPackage> populateAndValidateData(List<ContentPackage> metaData) throws ValidatorException {
         List<ContentPackage> contentPackageList = new ArrayList<>();
 
-        /* Get Data Inserted in Previous Dialog and Add it in a List*/
-        for(Component component : components){
-            if (component instanceof JPanel internal){
-                Component[] internalComp = internal.getComponents();
-
-                for(Component comp : internalComp){
-
-                    if(comp instanceof JFormattedTextField f){
-                        newData.add(f.getText());
-                    } else if(comp instanceof DatePicker d){
-                        try {
-                            newData.add(d.getDate().toString());
-                        } catch (RuntimeException e){
-                            throw new ValidatorException(e.getMessage());
-                        }
-                    }
-                }
-            } else {
-                throw new RuntimeException("Something gone wrong");
-            }
-        }
-
-        if(newData.isEmpty()) throw new ValidatorException("Error Data is Empty");
-
         /* WHY CREATE A NEW CONTENTPACKAGE? TO NOT EXPOSE setDataString: DATA is Final. */
-
         /* Populate contentPackageList With Data Inserted by User */
         int i = 0;
-        for(ContentPackage c : emptyData){
-            String data = newData.get(i++);
+        for(ContentPackage c : metaData){
+            try {
+                //Use New UserDialogPanel Class to obtain data straight away by Key = ColumnName.
+                String data = this.userDialog.getTexts().get(c.getColumnName()).toString();
 
-            /* FUNDAMENTAL CHECK ON EMPTY STRINGS */
-            if(!c.isNullable()){
-                if(data == null || data.isEmpty()) throw new ValidatorException("Attributo " + c.getColumnName() + " non può essere vuoto!");
+                /* FUNDAMENTAL CHECK ON EMPTY STRINGS */
+                if(!c.isNullable()){
+                    if(data == null || data.isEmpty()) throw new ValidatorException("Attributo " + c.getColumnName() + " non può essere vuoto!");
+                }
+                contentPackageList.add(
+                        new ContentPackage(c.getIndex(), data, c.getColumnName(), c.getType())
+                );
+
+            } catch (RuntimeException e){
+                throw new ValidatorException(e.getMessage());
             }
-            contentPackageList.add(
-                    new ContentPackage(c.getIndex(), data, c.getColumnName(), c.getType())
-            );
         }
 
         System.out.println(contentPackageList);
@@ -232,7 +212,6 @@ public class Insert extends JOptionPane implements DataManipulation{
 
         //return ( tableName.equalsIgnoreCase("dipendentiView") || tableName.toLowerCase().contains("view") );
     }
-
 
 
 
@@ -384,5 +363,72 @@ public class Insert extends JOptionPane implements DataManipulation{
         return insertDataIndexType;
     }
 
+
+    /**
+     * NEW Populate and Validate Data Method <br />
+     * After MainPanelDialog. <br />
+     * Before is performed a validation for some of more sensible data (IDs like Targa, Matricola ecc)
+     * @param emptyData List of Content Package containing only MetaData for Each Column
+     * @return List&lt;ContentPackage&gt; With All Data and MetaData needed For Insertion
+     * @throws ValidatorException if Validation Fails: Empty Strings, NON-Valid Formatting (i.e. Matricola must have AA0000 format) ecc...
+     */
+    @Deprecated
+    private List<ContentPackage> populateAndValidateDataOld(List<ContentPackage> emptyData) throws ValidatorException {
+        Component[] components = mainDialogPanel.getComponents();
+
+        List<String> newData = new ArrayList<>();
+        List<ContentPackage> contentPackageList = new ArrayList<>();
+
+        /* Get Data Inserted in Previous Dialog and Add it in a List*/
+        for(Component component : components){
+            if (component instanceof JPanel internal){
+                Component[] internalComp = internal.getComponents();
+
+                for(Component comp : internalComp){
+
+                    if(comp instanceof JFormattedTextField f){
+                        newData.add(f.getText());
+                    } else if(comp instanceof DatePicker d){
+                        try {
+                            newData.add(d.getDate().toString());
+                        } catch (RuntimeException e){
+                            throw new ValidatorException(e.getMessage());
+                        }
+                    }
+                }
+            } else {
+                throw new RuntimeException("Something gone wrong");
+            }
+        }
+
+        if(newData.isEmpty()) throw new ValidatorException("Error Data is Empty");
+
+        /* WHY CREATE A NEW CONTENTPACKAGE? TO NOT EXPOSE setDataString: DATA is Final. */
+
+        /* Populate contentPackageList With Data Inserted by User */
+        int i = 0;
+        for(ContentPackage c : emptyData){
+            String data = newData.get(i++);
+
+            /* FUNDAMENTAL CHECK ON EMPTY STRINGS */
+            if(!c.isNullable()){
+                if(data == null || data.isEmpty()) throw new ValidatorException("Attributo " + c.getColumnName() + " non può essere vuoto!");
+            }
+            contentPackageList.add(
+                    new ContentPackage(c.getIndex(), data, c.getColumnName(), c.getType())
+            );
+        }
+
+        System.out.println(contentPackageList);
+
+        /*DATA CHECK*/
+
+        /*Automatic Validation of Data, Throw ValidatorException if Fails Control */
+        if(ContentChecker.checker(ContentPackage.returnDataMapAsString(contentPackageList), this.workingTable))
+            return contentPackageList;
+
+        //Should Not Get Here
+        throw new RuntimeException("Something Went Wrong");
+    }
 
 }
