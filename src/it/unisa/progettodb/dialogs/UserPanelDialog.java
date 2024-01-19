@@ -27,7 +27,7 @@ import java.util.List;
  * @see #createUserInputPanel(List)
  */
 
-public class UserPanelDialog {
+public class UserPanelDialog extends JComponent {
     private JPanel panel;
     private final HashMap<String, JComponent> fields;
 
