@@ -65,7 +65,7 @@ public class UserPanelDialog {
         HashMap<String, Object> res = new HashMap<>();
         for(Map.Entry<String,JComponent> e : this.fields.entrySet()){
                if(e.getValue() instanceof JTextField t){
-                   res.put(e.getKey(), t.getText());
+                   res.put(e.getKey(), t.getText().trim());
                } else if(e.getValue() instanceof DatePicker d){
                    res.put(e.getKey(), d.getDate() == null ? null : d.getDate().toString()); //May be NULL
                }
