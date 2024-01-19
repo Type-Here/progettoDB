@@ -46,7 +46,7 @@ public class CustomDocFilter extends DocumentFilter {
 
             /*THIS CHECK IS DATABASE SPECIFIC*/
             if(this.type == JDBCType.CHAR) return text.matches("[A-Z0-9-]+");
-            return text.matches("[A-Za-z0-9.@_-]+");
+            return text.matches("[A-Za-z0-9òàèìù'.@_ -]+");
 
         } catch (IllegalArgumentException e){
             return false;
