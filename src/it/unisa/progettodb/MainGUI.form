@@ -1,32 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="it.unisa.progettodb.MainGUI">
-  <grid id="27dc6" binding="mainContainer" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-    <margin top="0" left="0" bottom="0" right="0"/>
+  <grid id="27dc6" binding="mainContainer" layout-manager="BorderLayout" hgap="0" vgap="0">
     <constraints>
       <xy x="20" y="20" width="500" height="400"/>
     </constraints>
     <properties/>
     <border type="none"/>
     <children>
-      <scrollpane id="88b35">
-        <constraints>
-          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
-            <preferred-size width="400" height="600"/>
-          </grid>
-        </constraints>
-        <properties/>
-        <border type="none"/>
-        <children>
-          <component id="ab558" class="javax.swing.JTable" binding="tableView">
-            <constraints/>
-            <properties/>
-          </component>
-        </children>
-      </scrollpane>
       <grid id="b0eb1" binding="topPanel" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
-        <constraints>
-          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-        </constraints>
+        <constraints border-constraint="North"/>
         <properties>
           <foreground color="-2104859"/>
         </properties>
@@ -74,32 +56,57 @@
           </component>
         </children>
       </grid>
-      <scrollpane id="11f3">
-        <constraints>
-          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
-            <minimum-size width="150" height="50"/>
-            <preferred-size width="150" height="70"/>
-          </grid>
-        </constraints>
+      <splitpane id="17551">
+        <constraints border-constraint="Center"/>
         <properties>
-          <autoscrolls value="true"/>
+          <background color="-13631480"/>
+          <dividerSize value="8"/>
+          <enabled value="true"/>
+          <foreground color="-2104859"/>
+          <oneTouchExpandable value="true"/>
+          <orientation value="0"/>
+          <resizeWeight value="0.6"/>
         </properties>
-        <border type="etched" title="Logs" title-justification="2">
-          <font/>
-          <title-color color="-15987700"/>
-        </border>
+        <border type="none"/>
         <children>
-          <component id="46853" class="javax.swing.JTextArea" binding="textAreaLog">
-            <constraints/>
+          <scrollpane id="88b35">
+            <constraints>
+              <splitpane position="left"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <component id="ab558" class="javax.swing.JTable" binding="tableView">
+                <constraints/>
+                <properties/>
+              </component>
+            </children>
+          </scrollpane>
+          <scrollpane id="11f3">
+            <constraints>
+              <splitpane position="right"/>
+            </constraints>
             <properties>
-              <autoscrolls value="false"/>
-              <editable value="false"/>
-              <lineWrap value="true"/>
-              <wrapStyleWord value="true"/>
+              <autoscrolls value="true"/>
             </properties>
-          </component>
+            <border type="etched" title="Logs" title-justification="2">
+              <font/>
+              <title-color color="-15987700"/>
+            </border>
+            <children>
+              <component id="46853" class="javax.swing.JTextArea" binding="textAreaLog">
+                <constraints/>
+                <properties>
+                  <autoscrolls value="false"/>
+                  <editable value="false"/>
+                  <lineWrap value="true"/>
+                  <wrapStyleWord value="true"/>
+                </properties>
+              </component>
+            </children>
+          </scrollpane>
         </children>
-      </scrollpane>
+      </splitpane>
     </children>
   </grid>
 </form>
