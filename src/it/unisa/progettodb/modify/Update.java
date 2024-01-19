@@ -22,14 +22,14 @@ public class Update extends JOptionPane implements DataManipulation{
     private final Component owner;
     private JPanel mainDialogPanel;
     private UserPanelDialog userPanel;
-    private final List<ContentPackage> contentPackageList; //Old Data
+    private final List<ContentPackage> existingDataRow; //Old Data
 
-    public Update(Component owner, DBManagement managerDB, String workingTable, List<ContentPackage> contentPackageList) {
+    public Update(Component owner, DBManagement managerDB, String workingTable, List<ContentPackage> existingDataRow) {
         super(null, JOptionPane.INFORMATION_MESSAGE, JOptionPane.OK_CANCEL_OPTION );
         this.managerDB = managerDB;
         this.workingTable = workingTable;
         this.owner = owner;
-        this.contentPackageList = contentPackageList;
+        this.existingDataRow = existingDataRow;
     }
 
     /**
@@ -51,25 +51,16 @@ public class Update extends JOptionPane implements DataManipulation{
 
             /*Saves Primary Key Values In Another List*/
             HashMap<String,Integer> primaryKeyName = managerDB.retrievePrimaryKeys(this.workingTable);
-
-            List<ContentPackage> primaryKeyData = new ArrayList<>();
-            //primaryKeyName.forEach((key, value) -> System.out.println("Primary Key is" + key + "-Seq=" + value)); //DEBUG
-
-            /* Get Only Primary Key attributes and their values from All Data */
-            for(Map.Entry<String, Integer> e: primaryKeyName.entrySet()){
-                ContentPackage c = this.contentPackageList.stream()
-                        .filter(content -> e.getKey().equalsIgnoreCase(content.getColumnName()))
-                        .findFirst().orElseThrow();
-                primaryKeyData.add(c);
-            }
+            /*Get Primary Key Value(s)*/
+            List<ContentPackage> primaryKeyData = getPrimaryKeyData(primaryKeyName);
 
             /* DATABASE SPECIFIC */
             /* Removes Other Data That User Cannot Modify (derived attribute, ...) */
-            DataManipulation.removeNonUserModifyAbleData(contentPackageList, this.workingTable);
+            DataManipulation.removeNonUserModifyAbleData(this.existingDataRow, this.workingTable);
 
             //NB: Primary Key Values Won't Be Remove They Will Grayed-Out for Better View
             /*Create JPanel*/
-            setPanel(contentPackageList, primaryKeyName);
+            setPanel(existingDataRow, primaryKeyName);
             /* Show First Dialog */
             if( JOptionPane.showConfirmDialog(this.owner, mainDialogPanel, "Insert Data in Table",
                                                         this.optionType, this.messageType)
@@ -78,10 +69,10 @@ public class Update extends JOptionPane implements DataManipulation{
                 List<ContentPackage> emptyData = managerDB.makeEmptyContentPackage(this.workingTable); //metaData
                 DataManipulation.removeNonUserModifyAbleData(emptyData, this.workingTable);
 
-                List<ContentPackage> updateData = validateData(emptyData, this.contentPackageList);
+                List<ContentPackage> updateData = this.validateData(emptyData, this.existingDataRow);
 
                 /*Confirm Dialog*/
-                if(finalCheckDialog(ContentPackage.returnDataMapAsString(this.contentPackageList),
+                if(finalCheckDialog(ContentPackage.returnDataMapAsString(this.existingDataRow),
                                             ContentPackage.returnDataMapAsString(updateData))
                         == JOptionPane.OK_OPTION ){
 
@@ -103,12 +94,32 @@ public class Update extends JOptionPane implements DataManipulation{
             JOptionPane.showMessageDialog(this.owner, e.getMessage() + "\nSeleziona (altra) Tabella e Riprova",
                     "Attenzione", JOptionPane.ERROR_MESSAGE);
 
-        } catch (ValidatorException e) {
+        } catch (NoSuchElementException | ValidatorException e) {
             JOptionPane.showMessageDialog(this.mainDialogPanel, "Data Not Valid: \n" + e.getMessage(),
                     "Warning", JOptionPane.ERROR_MESSAGE);
         }
 
         return false;
+    }
+
+
+    /**
+     * Having Column Name of each primary Key Attribute, retrieve existingData from Selected Row
+     * @param primaryKeyName Map of Primary Key Column Names (K: Name - E: Index)
+     * @return List&lt;ContentPackage&gt; containing Existing Data for Primary Key Value(s) from Selected Row.
+     */
+    private List<ContentPackage> getPrimaryKeyData(HashMap<String, Integer> primaryKeyName) {
+        List<ContentPackage> primaryKeyData = new ArrayList<>();
+        //primaryKeyName.forEach((key, value) -> System.out.println("Primary Key is" + key + "-Seq=" + value)); //DEBUG
+
+        /* Get Only Primary Key attributes and their values from All Data */
+        for(Map.Entry<String, Integer> e: primaryKeyName.entrySet()){
+            ContentPackage c = this.existingDataRow.stream()
+                    .filter(content -> e.getKey().equalsIgnoreCase(content.getColumnName()))
+                    .findFirst().orElseThrow();
+            primaryKeyData.add(c);
+        }
+        return primaryKeyData;
     }
 
     /**
@@ -166,7 +177,7 @@ public class Update extends JOptionPane implements DataManipulation{
     private List<ContentPackage> validateData(List<ContentPackage> metaData, List<ContentPackage> oldData) throws ValidatorException {
 
         /* Retrieve Data from Panel. It also checks for Null or Empty Strings if Field is not Nullable. */
-        List<ContentPackage> newData = DataManipulation.retrieveAndValidate(metaData, this.mainDialogPanel);
+        List<ContentPackage> newData = DataManipulation.retrieveDataFromPanel(metaData, this.userPanel);
 
         /* Remove Data if Equal To OldData to Retain only Updated */
         newData.removeIf(c -> oldData.stream().anyMatch(old -> {
@@ -227,6 +238,9 @@ public class Update extends JOptionPane implements DataManipulation{
     public boolean isUpdatable(String tableName){
         return !tableName.equalsIgnoreCase(TablesEnum.DipendentiView.name());
     }
+
+
+
 
     /* ==================================== DEPRECATED ========================================= */
 
