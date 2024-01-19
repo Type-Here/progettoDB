@@ -73,6 +73,10 @@ public class UserPanelDialog extends JComponent {
         return res;
     }
 
+    public HashMap<String, JComponent> getFields(){
+        return this.fields;
+    }
+
 
     /**
      * Create a GridLayout Panel. <br />
