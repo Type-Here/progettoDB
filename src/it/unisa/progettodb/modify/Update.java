@@ -21,6 +21,7 @@ public class Update extends JOptionPane implements DataManipulation{
     private final String workingTable;
     private final Component owner;
     private JPanel mainDialogPanel;
+    private UserPanelDialog userPanel;
     private final List<ContentPackage> contentPackageList; //Old Data
 
     public Update(Component owner, DBManagement managerDB, String workingTable, List<ContentPackage> contentPackageList) {
@@ -111,6 +112,7 @@ public class Update extends JOptionPane implements DataManipulation{
     }
 
     /**
+     * It uses New UserPanelDialog Component <br />
      * This Method uses UserPanelDialog.createUserInputPanel to create a JDialog. <br />
      * Then uses Table Data to Visualize Existing Values (Old Values). <br />
      * Set Up the MainDialogPanel with each row a filed to insert data. <br />
@@ -119,34 +121,33 @@ public class Update extends JOptionPane implements DataManipulation{
      * @param contentPackageList containing only MetaData (index, columnName, precision, isNullable, JDBCType)
      */
     private void setPanel(List<ContentPackage> contentPackageList, HashMap<String, Integer> primaryKeys) {
-        this.mainDialogPanel = UserPanelDialog.createUserInputPanel(contentPackageList).getPanel();
+        this.userPanel = UserPanelDialog.createUserInputPanel(contentPackageList);
+        this.mainDialogPanel = this.userPanel.getPanel();
 
-        Component[] c = mainDialogPanel.getComponents();
         int i = 0;
-        /* Set Existing Data In Input Fields */
-        for(Component component : c){
-            if (component instanceof JPanel internal){
-                Component[] internalComp = internal.getComponents();
 
-                for(Component comp : internalComp){
-                    if(comp instanceof JFormattedTextField || comp instanceof DatePicker) {
-                        ContentPackage cp = contentPackageList.get(i++);
-                        if (primaryKeys.keySet().stream().anyMatch(key -> cp.getColumnName().equalsIgnoreCase(key))) {
-                            comp.setEnabled(false);
-                            ((JComponent) comp).setToolTipText("Disabled Update On Key Attribute");
-                        }
-                        if (comp instanceof JFormattedTextField f) {
-                            f.setText(cp.getDataString());
-                        } else {
-                            DatePicker d = (DatePicker) comp;
-                            d.setDate(LocalDate.parse(cp.getDataString()));
-                        }
-                    }
+        /* Set Existing Data In Input Fields */
+        for (Map.Entry<String, JComponent> e : this.userPanel.getFields().entrySet()) {
+            JComponent comp = e.getValue();
+            if (comp instanceof JFormattedTextField || comp instanceof DatePicker) {
+                ContentPackage cp = contentPackageList.get(i++);
+
+                if (primaryKeys.keySet().stream().anyMatch(key -> cp.getColumnName().equalsIgnoreCase(key))) {
+                    comp.setEnabled(false);
+                    comp.setToolTipText("Disabled Update On Key Attribute");
+                }
+
+                if (comp instanceof JFormattedTextField f) {
+                    f.setText(cp.getDataString());
+                } else {
+                    DatePicker d = (DatePicker) comp;
+                    d.setDate(LocalDate.parse(cp.getDataString()));
                 }
             } else {
                 throw new RuntimeException("Something Wrong While Obtaining Input Field");
             }
         }
+
     }
 
 
@@ -157,15 +158,15 @@ public class Update extends JOptionPane implements DataManipulation{
      * - Check if data Modified Data is well Formatted
      * Then this method filter only updated data. If new List is empty throw an error.
      * Else return the updated ContentPackage list
-     * @param emptyData containing metadata for each column
+     * @param metaData containing metadata for each column
      * @param oldData containing OldData
      * @return A List of ContentPackage with only updated values
      * @throws ValidatorException if data validation fails or no data is actually modified
      */
-    private List<ContentPackage> validateData(List<ContentPackage> emptyData, List<ContentPackage> oldData) throws ValidatorException {
+    private List<ContentPackage> validateData(List<ContentPackage> metaData, List<ContentPackage> oldData) throws ValidatorException {
 
         /* Retrieve Data from Panel. It also checks for Null or Empty Strings if Field is not Nullable. */
-        List<ContentPackage> newData = DataManipulation.retrieveAndValidate(emptyData, this.mainDialogPanel);
+        List<ContentPackage> newData = DataManipulation.retrieveAndValidate(metaData, this.mainDialogPanel);
 
         /* Remove Data if Equal To OldData to Retain only Updated */
         newData.removeIf(c -> oldData.stream().anyMatch(old -> {
@@ -225,6 +226,49 @@ public class Update extends JOptionPane implements DataManipulation{
      */
     public boolean isUpdatable(String tableName){
         return !tableName.equalsIgnoreCase(TablesEnum.DipendentiView.name());
+    }
+
+    /* ==================================== DEPRECATED ========================================= */
+
+    /**
+     * This Method uses UserPanelDialog.createUserInputPanel to create a JDialog. <br />
+     * Then uses Table Data to Visualize Existing Values (Old Values). <br />
+     * Set Up the MainDialogPanel with each row a filed to insert data. <br />
+     * Use DocumentFilter and inputValidator to Check On Input User.
+     *
+     * @param contentPackageList containing only MetaData (index, columnName, precision, isNullable, JDBCType)
+     */
+    @Deprecated
+    private void setPanelOld(List<ContentPackage> contentPackageList, HashMap<String, Integer> primaryKeys) {
+        this.userPanel = UserPanelDialog.createUserInputPanel(contentPackageList);
+        this.mainDialogPanel = this.userPanel.getPanel();
+
+        Component[] c = mainDialogPanel.getComponents();
+        int i = 0;
+        /* Set Existing Data In Input Fields */
+        for(Component component : c){
+            if (component instanceof JPanel internal){
+                Component[] internalComp = internal.getComponents();
+
+                for(Component comp : internalComp){
+                    if(comp instanceof JFormattedTextField || comp instanceof DatePicker) {
+                        ContentPackage cp = contentPackageList.get(i++);
+                        if (primaryKeys.keySet().stream().anyMatch(key -> cp.getColumnName().equalsIgnoreCase(key))) {
+                            comp.setEnabled(false);
+                            ((JComponent) comp).setToolTipText("Disabled Update On Key Attribute");
+                        }
+                        if (comp instanceof JFormattedTextField f) {
+                            f.setText(cp.getDataString());
+                        } else {
+                            DatePicker d = (DatePicker) comp;
+                            d.setDate(LocalDate.parse(cp.getDataString()));
+                        }
+                    }
+                }
+            } else {
+                throw new RuntimeException("Something Wrong While Obtaining Input Field");
+            }
+        }
     }
 
 }
