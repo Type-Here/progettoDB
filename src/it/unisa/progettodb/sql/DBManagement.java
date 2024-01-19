@@ -13,8 +13,6 @@ import java.util.*;
 public class DBManagement {
     private Connection connectDB;
     private final String DBName;
-    private Statement stmt;
-    private ResultSet rSet;
     private LoggerManager loggerManager;
 
     public enum ActionEnum {Select, Insert, Delete, Update, GetSchemas, Connected, FetchDataType, FetchMetaData, Info, Query}
@@ -38,7 +36,7 @@ public class DBManagement {
             System.out.println(url);
             connectDB = DriverManager.getConnection(url, user, pass);
             System.out.println("DataBase Connesso");
-            stmt = connectDB.createStatement();
+            //Statement stmt = connectDB.createStatement();
 
             this.sendToLog(ActionEnum.Connected);
         } catch (ClassNotFoundException ex) {
@@ -84,15 +82,17 @@ public class DBManagement {
         List<String> tabNames = new ArrayList<>();
         /*ResultSet rs = md.getTables(null, "ATI", "%", null);*/
         String query = " select table_name from information_schema.tables WHERE table_schema = '"+ DBName + '\'';
-        /*Statement stmt = connectDB.createStatement();*/
-        rSet = stmt.executeQuery(query);
+        try (Statement stmt = connectDB.createStatement()) {
+            try(ResultSet rSet = stmt.executeQuery(query)) {
 
-        while (rSet.next()) {
-            tabNames.add( rSet.getString(1) );
+                while (rSet.next()) {
+                    tabNames.add(rSet.getString(1));
+                }
+
+                this.sendToLog(ActionEnum.GetSchemas);
+                return tabNames;
+            }
         }
-
-        this.sendToLog(ActionEnum.GetSchemas);
-        return tabNames;
     }
 
     /**
@@ -205,16 +205,18 @@ public class DBManagement {
     }
 
 
-    /* ================================= MAIN QUERY EXECUTION ============================== */
 
     /**
-     * Execute a SELECT row0, row1 [, ...] FROM TableName
+     * Private Method (used to fetchMetaData ecc) <br />
+     * It should not be used as a public method to retrieve data since ResultSet is not closed here. <br />
+     * Calling Method <b>have to close ResultSet</b> after usage.
+     * Execute a SELECT row(s) FROM TableName
      * @param column column to SELECT (es. *, name, surname ecc..)
      * @param tableName table to select FROM
      * @return ResultSet with result Data
      * @throws SQLException if SELECT fails
      */
-    public ResultSet executeSelectRSet(String[] column, String tableName) throws SQLException {
+    private ResultSet executeSelectRSet(String[] column, String tableName) throws SQLException {
         StringBuilder build = new StringBuilder();
         Iterator<String> rowIt = Arrays.stream(column).iterator();
 
@@ -224,13 +226,18 @@ public class DBManagement {
             if(rowIt.hasNext()) build.append(", ");
         }
         build.append(" FROM ").append(tableName);
-        System.out.println("Query: '" + build + '\'');
 
-        rSet = stmt.executeQuery(build.toString());
+        //System.out.println("Query: '" + build + '\'');
+
+        Statement stmt = connectDB.createStatement();
+        ResultSet rSet = stmt.executeQuery(build.toString());
 
         this.sendToLog(build.toString(), ActionEnum.Select);
         return rSet;
     }
+
+    /* ================================= MAIN QUERY EXECUTION ============================== */
+
 
     /**
      * Execute INSERT in Table.
@@ -301,22 +308,23 @@ public class DBManagement {
         }
         buildIns.append(" ;");
 
-        PreparedStatement pStmt = connectDB.prepareStatement(buildIns.toString());
+        try(PreparedStatement pStmt = connectDB.prepareStatement(buildIns.toString())){
 
-        /* Fill PreparedStatement with Data Using Statement method */
-        i = 1;
-        for(Map.Entry<String, Object> e : dataMap.entrySet()){
-            if(e.getValue() == null) throw new RuntimeException("Valore Null in DELETE DBManagement");
-            if(e.getValue() instanceof String s){
-                if(s.isEmpty()) throw new RuntimeException("Stringa Vuota in DELETE DBManagement");
+            /* Fill PreparedStatement with Data Using Statement method */
+            i = 1;
+            for(Map.Entry<String, Object> e : dataMap.entrySet()){
+                if(e.getValue() == null) throw new RuntimeException("Valore Null in DELETE DBManagement");
+                if(e.getValue() instanceof String s){
+                    if(s.isEmpty()) throw new RuntimeException("Stringa Vuota in DELETE DBManagement");
+                }
+                pStmt.setObject(i++, e.getValue());
             }
-            pStmt.setObject(i++, e.getValue());
-        }
 
-        /*Execute Delete Query*/
-        pStmt.executeUpdate();
-        //Logs
-        sendToLog(pStmt.toString(), ActionEnum.Delete);
+            /*Execute Delete Query*/
+            pStmt.executeUpdate();
+            //Logs
+            sendToLog(pStmt.toString(), ActionEnum.Delete);
+        }
     }
 
 
@@ -358,31 +366,32 @@ public class DBManagement {
 
         buildIns.append(" ;");
 
-        PreparedStatement pStmt = connectDB.prepareStatement(buildIns.toString());
+        try( PreparedStatement pStmt = connectDB.prepareStatement(buildIns.toString()) ) {
 
-        /* Fill PreparedStatement with Data Using Statement method */
-        i = 1;
-        for(Map.Entry<String, Object> e : dataMap.entrySet()){
-            if(e.getValue() == null) throw new RuntimeException("Valore Null in UPDATE DBManagement");
-            if(e.getValue() instanceof String s){
-                if(s.isEmpty()) throw new RuntimeException("Stringa Vuota in UPDATE DBManagement");
+            /* Fill PreparedStatement with Data Using Statement method */
+            i = 1;
+            for (Map.Entry<String, Object> e : dataMap.entrySet()) {
+                if (e.getValue() == null) throw new RuntimeException("Valore Null in UPDATE DBManagement");
+                if (e.getValue() instanceof String s) {
+                    if (s.isEmpty()) throw new RuntimeException("Stringa Vuota in UPDATE DBManagement");
+                }
+                pStmt.setObject(i++, e.getValue());
             }
-            pStmt.setObject(i++, e.getValue());
-        }
 
-        for(Map.Entry<String, Object> e : primaryKeyValues.entrySet()){
-            if(e.getValue() == null) throw new RuntimeException("Valore Null in UPDATE DBManagement");
-            if(e.getValue() instanceof String s){
-                if(s.isEmpty()) throw new RuntimeException("Stringa Vuota in UPDATE DBManagement");
+            for (Map.Entry<String, Object> e : primaryKeyValues.entrySet()) {
+                if (e.getValue() == null) throw new RuntimeException("Valore Null in UPDATE DBManagement");
+                if (e.getValue() instanceof String s) {
+                    if (s.isEmpty()) throw new RuntimeException("Stringa Vuota in UPDATE DBManagement");
+                }
+                pStmt.setObject(i++, e.getValue());
             }
-            pStmt.setObject(i++, e.getValue());
+
+            /*Execute UPDATE Query*/
+            pStmt.executeUpdate();
+
+            //Logs
+            sendToLog(pStmt.toString(), ActionEnum.Update);
         }
-
-        /*Execute UPDATE Query*/
-        pStmt.executeUpdate();
-
-        //Logs
-        sendToLog(pStmt.toString(), ActionEnum.Update);
     }
 
     /* ===================== SELECT WITH CONDITIONS ======================= */
@@ -426,23 +435,24 @@ public class DBManagement {
         }
         build.append(" ;");
 
-        PreparedStatement pStmt = connectDB.prepareStatement(build.toString());
+        try( PreparedStatement pStmt = connectDB.prepareStatement(build.toString()) ) {
 
-        /* Fill PreparedStatement with Data Using Statement method */
-        int i = 1;
-        for(Map.Entry<String, Object> e : conditions.entrySet()){
-            if(e.getValue() == null) throw new RuntimeException("Valore Null in UPDATE DBManagement");
-            if(e.getValue() instanceof String s){
-                if(s.isEmpty()) throw new RuntimeException("Stringa Vuota in UPDATE DBManagement");
+            /* Fill PreparedStatement with Data Using Statement method */
+            int i = 1;
+            for (Map.Entry<String, Object> e : conditions.entrySet()) {
+                if (e.getValue() == null) throw new RuntimeException("Valore Null in UPDATE DBManagement");
+                if (e.getValue() instanceof String s) {
+                    if (s.isEmpty()) throw new RuntimeException("Stringa Vuota in UPDATE DBManagement");
+                }
+                pStmt.setObject(i++, e.getValue());
             }
-            pStmt.setObject(i++, e.getValue());
-        }
-        //System.out.println(pStmt.toString());
+            //System.out.println(pStmt.toString());
 
-        try(ResultSet rSet = pStmt.executeQuery() ) {
-            this.sendToLog("with Conditions: " + pStmt, ActionEnum.Select);
+            try (ResultSet rSet = pStmt.executeQuery()) {
+                this.sendToLog("with Conditions: " + pStmt, ActionEnum.Select);
 
-            return ContentWrap.getContentWrap(rSet);
+                return ContentWrap.getContentWrap(rSet);
+            }
         }
     }
 
@@ -467,14 +477,15 @@ public class DBManagement {
 
         build.append(" ;");
 
-        PreparedStatement pStmt = connectDB.prepareStatement(build.toString());
+        try(PreparedStatement pStmt = connectDB.prepareStatement(build.toString())) {
 
-        //System.out.println(pStmt.toString());
+            //System.out.println(pStmt.toString());
 
-        try(ResultSet rSet = pStmt.executeQuery() ) {
-            this.sendToLog(pStmt.toString(), ActionEnum.Select);
+            try (ResultSet rSet = pStmt.executeQuery()) {
+                this.sendToLog(pStmt.toString(), ActionEnum.Select);
 
-            return ContentWrap.getContentWrap(rSet);
+                return ContentWrap.getContentWrap(rSet);
+            }
         }
     }
 
