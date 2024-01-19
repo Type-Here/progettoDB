@@ -2,6 +2,7 @@ package it.unisa.progettodb.modify;
 
 import com.github.lgooddatepicker.components.DatePicker;
 import it.unisa.progettodb.datacontrol.ContentPackage;
+import it.unisa.progettodb.dialogs.UserPanelDialog;
 import it.unisa.progettodb.exceptions.ValidatorException;
 
 import javax.swing.*;
@@ -10,6 +11,7 @@ import java.sql.JDBCType;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public interface  DataManipulation {
     enum TablesEnum{
@@ -46,7 +48,7 @@ public interface  DataManipulation {
         }
     }
 
-    static List<ContentPackage> retrieveAndValidate(List<ContentPackage> emptyData, JPanel mainDialogPanel) throws ValidatorException {
+    static List<ContentPackage> retrieveDataFromPanel(List<ContentPackage> emptyData, JPanel mainDialogPanel) throws ValidatorException {
         Component[] components = mainDialogPanel.getComponents();
 
         List<String> newData = new ArrayList<>();
@@ -91,6 +93,46 @@ public interface  DataManipulation {
         return contentPackageList;
     }
 
+    /**
+     * Retrieve Data from UserDialogPanel Object after User Input <br />
+     * @param metaData MetaData to get info about Column
+     * @param userPanel A UserDialogPanel Object to get info from
+     * @return List&lt;ContentPackage&gt; with all Data from Panel
+     * @throws ValidatorException if Not Nullable Data is Null or Empty
+     */
+    static List<ContentPackage> retrieveDataFromPanel(List<ContentPackage> metaData, UserPanelDialog userPanel) throws ValidatorException {
+
+        List<String> newData = new ArrayList<>();
+        List<ContentPackage> contentPackageList = new ArrayList<>();
+
+        /* Get Data Inserted in Previous Dialog and Add it in a List*/
+        for(Map.Entry<String, JComponent> e : userPanel.getFields().entrySet()){
+            JComponent comp = e.getValue();
+            if(comp instanceof JFormattedTextField f){
+                newData.add(f.getText().trim());
+            } else if(comp instanceof DatePicker d){
+                newData.add(d.getDate().toString());
+            }
+        }
+
+        if(newData.isEmpty()) throw new ValidatorException("Error Data is Empty");
+
+        /* WHY CREATE A NEW CONTENTPACKAGE? TO NOT EXPOSE setDataString: DATA is Final. */
+        /* Populate contentPackageList With Data Inserted by User */
+        int i = 0;
+        for(ContentPackage c : metaData){
+            String data = newData.get(i++);
+
+            /* FUNDAMENTAL CHECK ON EMPTY STRINGS */
+            if(!c.isNullable()){
+                if(data == null || data.isEmpty()) throw new ValidatorException("Attributo " + c.getColumnName() + " non può essere vuoto!");
+            }
+            contentPackageList.add(
+                    new ContentPackage(c.getIndex(), data, c.getColumnName(), c.getType())
+            );
+        }
+        return contentPackageList;
+    }
 
 
 }
