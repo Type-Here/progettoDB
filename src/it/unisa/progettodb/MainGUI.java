@@ -141,7 +141,7 @@ public class MainGUI {
         this.tableView.addPropertyChangeListener(e->{
             if(this.currentTable != null){
                 this.menuBar.getMenu(2).getItem(0).setEnabled(true); //Enable Select -> Filter if a Table is Selected
-                if(!this.currentTable.equalsIgnoreCase("consegna")){
+                if(!this.currentTable.equalsIgnoreCase("consegna") && !this.currentTable.equalsIgnoreCase("dirigente")){
                     this.dettagliButton.setVisible(false);
                 }
             } else {
@@ -163,7 +163,7 @@ public class MainGUI {
         this.tableView.getSelectionModel().addListSelectionListener( ev -> {
             if(this.tableView.getSelectedRow() >= 0){
                 this.modificaButton.setEnabled(true);
-                if(this.currentTable.equalsIgnoreCase("consegna")) this.dettagliButton.setEnabled(true);
+                if(this.currentTable.equalsIgnoreCase("consegna") || this.currentTable.equalsIgnoreCase("dirigente")) this.dettagliButton.setEnabled(true);
                 if(Delete.isDeletable(this.currentTable)) this.eliminaButton.setEnabled(true);
             } else {
                 this.dettagliButton.setEnabled(false);
@@ -197,7 +197,7 @@ public class MainGUI {
                     this.tableManager.setTable(this.currentTable);
                     this.cercaTabButton.setText("Reload");
                     //If New Table is 'Consegna' set dettagli button true
-                    this.dettagliButton.setVisible(this.currentTable.equalsIgnoreCase("consegna"));
+                    this.dettagliButton.setVisible(this.currentTable.equalsIgnoreCase("consegna") || this.currentTable.equalsIgnoreCase("dirigente"));
                 } catch (SQLException ex) {
                     JOptionPane.showMessageDialog(this.getMainContainer(), "Error: \n" + ex.getMessage());
                     throw new RuntimeException(ex);
@@ -271,8 +271,8 @@ public class MainGUI {
      * This Method Sets Listener for: <br />
      * - Dettagli Button <br />
      * in topPanel. <br />
-     * This Launch a JDialog if a Row in "Consegna" Table is Selected and the respective button is pressed. <br />
-     * It shows details for that specific delivery. <br />
+     * This Launch a JDialog if a Row in "Consegna" or "Dirigente" Table is Selected and the respective button is pressed. <br />
+     * It shows details for that specific delivery or manager. <br />
      * If no row is selected, this button should be disabled. It is not visible if Current Table is NOT "Consegna".
      */
     private void setDettagliButtonListener(){
@@ -281,17 +281,25 @@ public class MainGUI {
             int selectedRow = this.tableView.getSelectedRow();
 
             /*A Check Before Altering Table*/
-            if(!this.currentTable.equalsIgnoreCase("consegna")) throw new RuntimeException("Data is Not in SYNC!");
+            if(!this.currentTable.equalsIgnoreCase("consegna") && !this.currentTable.equalsIgnoreCase("dirigente") ) throw new RuntimeException("Data is Not in SYNC!");
 
             if( selectedRow >= 0){
                 try {
-                    ContentWrap result = Operations.getDeliveryDetails(this.managerDB, this.tableManager.getRowContentPackageList(selectedRow));
-                    this.menuAction.createTableDialog(result, "cte", 1000, 50, "Dettagli Consegna");
+
+                    if(this.currentTable.equalsIgnoreCase("dirigente")){
+                        MenuAction mgrDetails = new MenuAction(this.managerDB, this.getMainContainer());
+                        mgrDetails.openManagerDetailsDialog(this.tableManager.getRowContentPackageList(selectedRow));
+
+                    } else {
+                        ContentWrap result = Operations.getDeliveryDetails(this.managerDB, this.tableManager.getRowContentPackageList(selectedRow));
+                        this.menuAction.createTableDialog(result, "cte", 1000, 50, "Dettagli Consegna");
+                    }
 
                 } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(this.getMainContainer(), "Error: \n" + ex.getMessage());
-                    throw new RuntimeException(ex);
+                        JOptionPane.showMessageDialog(this.getMainContainer(), "Error: \n" + ex.getMessage());
+                        throw new RuntimeException(ex);
                 }
+
             } else {
                 JOptionPane.showMessageDialog(this.getMainContainer(), "No Row Selected in Table.",
                         "No Row Selected", JOptionPane.INFORMATION_MESSAGE);

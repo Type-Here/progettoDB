@@ -184,4 +184,26 @@ public class Operations {
     }
 
 
+
+
+    /* =============================================  OTHERS =========================================== */
+
+
+    /**
+     * Get Manager Details: Bonus is a derivable attribute,
+     * so we display it in this Query.
+     * A join on 'Dipendente' is used to get all other data of that specific Manager
+     */
+    public static ContentWrap getManagerDetails(DBManagement managerDB, HashMap<String, Object> texts) throws SQLException {
+        String query = """
+                SELECT *,
+                    CASE WHEN datediff(curdate(), datapromozione) < 3650 THEN ROUND( (year(curdate()) - year(datapromozione))/100, 2 )\s
+                     ELSE 0.1\s
+                    END AS bonus\s
+                FROM Dirigente JOIN Dipendente USING(Matricola)\s
+                WHERE Matricola=?;\s
+                       """;
+        return managerDB.execute(query, texts);
+    }
+
 }

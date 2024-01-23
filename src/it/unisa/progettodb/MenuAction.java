@@ -8,10 +8,12 @@ import it.unisa.progettodb.sql.Operations;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.HashMap;
 import java.util.List;
 import java.sql.JDBCType;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 
 public class MenuAction {
 
@@ -189,6 +191,28 @@ public class MenuAction {
             }
         }
     }
+
+
+    /* ================================= OTHERS ======================================== */
+
+    /**
+     * Action for Manager Details
+     */
+    public void openManagerDetailsDialog(List<ContentPackage> data) {
+        try {
+            HashMap<String, Object> dataMapped = new HashMap<>();
+            dataMapped.put( "Matricola", data.stream().filter(a -> a.getColumnName().equalsIgnoreCase("matricola"))
+                                                     .findFirst().orElseThrow().getDataString() );
+            ContentWrap result = Operations.getManagerDetails(this.managerDB, dataMapped);
+            createTableDialog(result, "cte_manager_detail", 700, 100, "Dettagli Dirigente");
+
+        } catch (NoSuchElementException | SQLException ex) {
+            JOptionPane.showMessageDialog(this.owner, "Error: \n" + ex.getMessage());
+            throw new RuntimeException(ex);
+        }
+    }
+
+
 
     /* ============================== DIALOG CREATOR =================================== */
 
