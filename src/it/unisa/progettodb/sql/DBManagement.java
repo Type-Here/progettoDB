@@ -31,6 +31,7 @@ public class DBManagement {
     public DBManagement(String hostname, int port, String user, String pass) throws SQLException {
         this.DBName = "ATI";
         try {
+            //No need for Class.forName in JDBC >= 4.x
             Class.forName("com.mysql.cj.jdbc.Driver");
             String url = "jdbc:mysql://"+ hostname +":"+ port + "/" + DBName;
             System.out.println(url);
