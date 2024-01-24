@@ -139,14 +139,14 @@ public class Operations {
 
     /**
      * Op.19 <br />
-     * Mezzo il cui numero di consegne è il più alto. B
+     * Solo Camionisti e non Macchinisti. B
      */
     public static ContentWrap getOnlyTruckCarriers(DBManagement managerDB) throws SQLException {
         String query = """
                 SELECT *\s
                 FROM trasportatore\s
-                WHERE matricola IN (SELECT matricola FROM consegna JOIN mezzo USING(targa) WHERE tipologia='Autotreno' OR tipologia='Motrice')\s
-                AND matricola NOT IN (SELECT matricola FROM consegna JOIN mezzo USING(targa) WHERE tipologia='Treno');""";
+                WHERE matricola IN (SELECT DISTINCT matricola FROM consegna JOIN mezzo USING(targa) WHERE tipologia='Autotreno' OR tipologia='Motrice')\s
+                AND matricola NOT IN (SELECT DISTINCT matricola FROM consegna JOIN mezzo USING(targa) WHERE tipologia='Treno');""";
         return managerDB.execute(query);
     }
 
