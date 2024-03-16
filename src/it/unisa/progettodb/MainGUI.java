@@ -428,8 +428,8 @@ public class MainGUI {
         JMenuItem deleteModifica = new JMenuItem("Elimina Riga...");
 
         menuModifica.add(inserisciModifica);
-        menuModifica.add(updateModifica);
-        menuModifica.add(deleteModifica);
+        //menuModifica.add(updateModifica);
+        //menuModifica.add(deleteModifica);
 
         //Inserisci (Modifica)
         inserisciModifica.addActionListener(e ->{

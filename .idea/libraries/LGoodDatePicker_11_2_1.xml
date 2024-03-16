@@ -1,11 +1,12 @@
 <component name="libraryTable">
   <library name="LGoodDatePicker-11.2.1">
     <CLASSES>
-      <root url="jar://$USER_HOME$/Desktop/Progetto DB/DatePicker/LGoodDatePicker-11.2.1.jar!/" />
+      <root url="jar://$USER_HOME$/opt/modules/Java/LGooDatePicker/LGoodDatePicker-11.2.1.jar!/" />
+      <root url="jar://$USER_HOME$/opt/modules/Java/mysql-8.0.25/mysql-connector-java-8.0.25.jar!/" />
     </CLASSES>
-    <JAVADOC>
-      <root url="jar://$USER_HOME$/Desktop/Progetto DB/DatePicker/LGoodDatePicker-11.2.1-javadoc.jar!/" />
-    </JAVADOC>
-    <SOURCES />
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/opt/modules/Java/LGooDatePicker/LGoodDatePicker-11.2.1-sources.jar!/" />
+    </SOURCES>
   </library>
 </component>
